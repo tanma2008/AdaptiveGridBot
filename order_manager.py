@@ -225,14 +225,50 @@ class OrderManager:
                 "Calculated BTC size is zero"
             )
 
-        response = trade_api.place_order(
-            instId=self.inst_id,
-            tdMode="cash",
-            side=side,
-            ordType="limit",
-            px=str(price),
-            sz=str(btc_size),
-        )
+        # ----------------------------------------------------
+        # IMPORTANT
+        #
+        # Do NOT use:
+        #
+        #     trade_api.place_order()
+        #
+        # The installed OKX SDK injects:
+        #
+        #     stpMode = ""
+        #
+        # which causes:
+        #
+        #     51000 Parameter stpMode error
+        #
+        # Use the authenticated request method directly
+        # with only the required parameters.
+        # ----------------------------------------------------
+
+        params = {
+            "instId": self.inst_id,
+            "tdMode": "cash",
+            "side": side,
+            "ordType": "limit",
+            "px": str(price),
+            "sz": str(btc_size),
+        }
+
+        try:
+
+            response = (
+                trade_api._request_with_params(
+                    Trade.POST,
+                    Trade.PLACR_ORDER,
+                    params,
+                )
+            )
+
+        except Exception as exc:
+
+            raise RuntimeError(
+                f"OKX Place Order Exception: "
+                f"{type(exc).__name__}: {exc}"
+            )
 
         if response.get("code") != "0":
 
@@ -256,6 +292,7 @@ def main():
     print("=" * 70)
 
     print()
+
     print(
         f"Exchange : "
         f"{'OKX DEMO' if FLAG == '1' else 'OKX LIVE'}"
@@ -266,6 +303,7 @@ def main():
     )
 
     print()
+
     print(
         "Checking open orders..."
     )

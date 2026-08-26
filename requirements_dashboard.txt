@@ -1,0 +1,4 @@
+Flask
+python-dotenv
+okx
+python-okx
