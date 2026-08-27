@@ -22,9 +22,11 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 SYMBOL = "BTC-USDT"
 
 ACCOUNTS = [
-    {"key": "A", "name": "v4.8", "env": ".env", "prefix": "v048"},
-    {"key": "B", "name": "v4.9", "env": ".env.v49", "prefix": "v049"},
-    {"key": "C", "name": "v5.1.1", "env": ".env.v50", "prefix": "V511"},
+    {"key": "A", "name": "v4.8", "env": ".env", "prefix": "v048", "symbol": "BTC-USDT"},
+    {"key": "B", "name": "v4.9", "env": ".env.v49", "prefix": "v049", "symbol": "BTC-USDT"},
+    {"key": "C", "name": "v5.1.1", "env": ".env.v50", "prefix": "V511", "symbol": "BTC-USDT"},
+    {"key": "D", "name": "ETH v4.8", "env": ".env", "prefix": "ETHv048", "symbol": "ETH-USDT"},
+    {"key": "E", "name": "ETH v4.9", "env": ".env.v49", "prefix": "ETHv049", "symbol": "ETH-USDT"},
 ]
 
 app = Flask(__name__)
@@ -43,11 +45,11 @@ def api_for(account):
     )
 
 
-def fetch_fills(api):
+def fetch_fills(api, symbol):
     result = []
     after = None
     for _ in range(10):
-        kw = {"instType": "SPOT", "instId": SYMBOL, "limit": "100"}
+        kw = {"instType": "SPOT", "instId": symbol, "limit": "100"}
         if after:
             kw["after"] = after
         r = api.get_fills(**kw)
@@ -134,17 +136,13 @@ def report(rows):
 def get_open_orders(account):
     try:
         api = api_for(account)
+        symbol = account.get("symbol", SYMBOL)
         r = api.get_order_list(instType="SPOT")
         if r.get("code") != "0":
             return {"all": 0, "bot": 0, "buy": 0, "sell": 0}
-        rows = [x for x in r.get("data", []) if x.get("instId") == SYMBOL]
+        rows = [x for x in r.get("data", []) if x.get("instId") == symbol]
         bot = [x for x in rows if str(x.get("clOrdId", "")).startswith(account["prefix"])]
-        return {
-            "all": len(rows),
-            "bot": len(bot),
-            "buy": sum(x.get("side") == "buy" for x in bot),
-            "sell": sum(x.get("side") == "sell" for x in bot),
-        }
+        return {"all": len(rows), "bot": len(bot), "buy": sum(x.get("side") == "buy" for x in bot), "sell": sum(x.get("side") == "sell" for x in bot)}
     except Exception:
         return {"all": 0, "bot": 0, "buy": 0, "sell": 0}
 
@@ -153,7 +151,7 @@ def get_dashboard():
     data = []
     for a in ACCOUNTS:
         try:
-            rows = period_fills(fetch_fills(api_for(a)), 12)
+            rows = period_fills(fetch_fills(api_for(a), a.get("symbol", SYMBOL)), 12)
             r = report(rows)
             orders = get_open_orders(a)
             data.append({**a, **r, "orders": orders, "error": None})
@@ -191,17 +189,17 @@ th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-chi
 <body>
 <div class="wrap">
 <h1>ADAPTIVE GRID BOT DASHBOARD</h1>
-<div class="sub">BTC-USDT · DEMO · 12H · Read Only</div>
+<div class="sub">5 BOT · BTC/ETH · DEMO · 12H · Read Only</div>
 <div class="grid" id="cards"></div>
 <table>
-<thead><tr><th>Metric</th><th>A / v4.8</th><th>B / v4.9</th><th>C / v5.1.1</th></tr></thead>
+<thead><tr><th>Metric</th><th>A / BTC v4.8</th><th>B / BTC v4.9</th><th>C / BTC v5.1.1</th><th>D / ETH v4.8</th><th>E / ETH v4.9</th></tr></thead>
 <tbody id="tbl"></tbody>
 </table>
 <p class="muted">Auto refresh: 30s · Last update: <span id="time">-</span></p>
 <button class="btn" onclick="load()">Refresh now</button>
 </div>
 <script>
-const names=["A","B","C"];
+const names=["A","B","C","D","E"];
 function n(v,d=4){return v===null||v===undefined?"N/A":Number(v).toFixed(d)}
 function pct(v){return v===null||v===undefined?"N/A":Number(v).toFixed(2)+"%"}
 function pnl(v){return v===null||v===undefined?"N/A":(v>=0?"+":"")+Number(v).toFixed(6)}
@@ -223,7 +221,7 @@ async function load(){
  ["Avg cycle P/L",x=>pnl(x.avg)],
  ["Best cycle",x=>pnl(x.best)],
  ["Worst cycle",x=>pnl(x.worst)],
- ["Unmatched BUY BTC",x=>n(x.inventory,8)],
+ ["Unmatched inventory",x=>n(x.inventory,8)],
  ["Active orders",x=>x.orders.bot],
  ["BUY / SELL",x=>`${x.orders.buy} / ${x.orders.sell}`]
  ];
