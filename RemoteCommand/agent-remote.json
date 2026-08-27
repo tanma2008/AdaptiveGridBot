@@ -1,0 +1,18 @@
+{
+  "name": "adaptivegridbot-remote-linux",
+  "version": "0.3.0",
+  "mode": "read-only",
+  "target": "root@100.105.241.85",
+  "transport": "ssh-over-tailscale",
+  "actions": [
+    "status",
+    "hostname",
+    "docker",
+    "disk",
+    "memory",
+    "uptime",
+    "network"
+  ],
+  "write_enabled": false,
+  "admin_enabled": false
+}

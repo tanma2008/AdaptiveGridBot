@@ -27,6 +27,7 @@ ACCOUNTS = [
     {"key": "C", "name": "v5.1.1", "env": ".env.v50", "prefix": "V511", "symbol": "BTC-USDT"},
     {"key": "D", "name": "ETH v4.8", "env": ".env", "prefix": "ETHv048", "symbol": "ETH-USDT"},
     {"key": "E", "name": "ETH v4.9", "env": ".env.v49", "prefix": "ETHv049", "symbol": "ETH-USDT"},
+    {"key": "F", "name": "ETH v5.1.1", "env": ".env.v50", "prefix": "F511", "symbol": "ETH-USDT"},
 ]
 
 app = Flask(__name__)
@@ -189,10 +190,10 @@ th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-chi
 <body>
 <div class="wrap">
 <h1>ADAPTIVE GRID BOT DASHBOARD</h1>
-<div class="sub">5 BOT · BTC/ETH · DEMO · 12H · Read Only</div>
+<div class="sub">6 BOT · BTC/ETH · DEMO · 12H · Read Only</div>
 <div class="grid" id="cards"></div>
 <table>
-<thead><tr><th>Metric</th><th>A / BTC v4.8</th><th>B / BTC v4.9</th><th>C / BTC v5.1.1</th><th>D / ETH v4.8</th><th>E / ETH v4.9</th></tr></thead>
+<thead><tr><th>Metric</th><th>A / BTC v4.8</th><th>B / BTC v4.9</th><th>C / BTC v5.1.1</th><th>D / ETH v4.8</th><th>E / ETH v4.9</th><th>F / ETH v5.1.1</th></tr></thead>
 <tbody id="tbl"></tbody>
 </table>
 <p class="muted">Auto refresh: 30s · Last update: <span id="time">-</span></p>

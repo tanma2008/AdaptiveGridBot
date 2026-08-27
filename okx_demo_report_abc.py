@@ -56,6 +56,14 @@ BOTS = [
         "prefix": "ETHv049",
         "folder": "reports_csv/ETH_E_v049",
     },
+    {
+        "id": "F",
+        "name": "F / ETH v5.1.1",
+        "symbol": "ETH-USDT",
+        "env": ".env.v50",
+        "prefix": "F511",
+        "folder": "reports_csv/ETH_F_v511",
+    },
 ]
 
 D = Decimal
@@ -324,7 +332,7 @@ def print_report(report, hours):
 
 def print_comparison(reports, hours):
     print("\n" + "=" * 110)
-    print(f"                 5-BOT DEMO COMPARISON - LAST {hours} HOURS")
+    print(f"                 6-BOT DEMO COMPARISON - LAST {hours} HOURS")
     print("=" * 110)
     print(f"{'Bot':<18}{'Symbol':<12}{'Fills':>8}{'Cycles':>9}{'Win%':>9}{'Realized':>14}{'PF':>10}{'Unmatched':>14}")
     print("-" * 110)
@@ -332,7 +340,7 @@ def print_comparison(reports, hours):
         pf = "INF" if r["profit_factor"] is None else f"{r['profit_factor']:.4f}"
         print(f"{r['bot']['name']:<18}{r['bot']['symbol']:<12}{len(r['fills']):>8}{r['completed_cycles']:>9}{r['win_rate']:>8.2f}%{r['realized']:>14.6f}{pf:>10}{r['unmatched']:>14.8f}")
     print("-" * 110)
-    print("NOTE: BTC bots are compared directly with each other; ETH is shown separately because symbol/price scale differs.")
+    print("NOTE: BTC bots are compared directly with each other; ETH bots are shown separately because symbol/price scale differs.")
 
 
 def main():
