@@ -5,7 +5,7 @@ Designed for the existing Linux server running v5.1.1.
 
 - No OKX order placement/cancellation.
 - Reads the same .env files used by the report.
-- Shows A/B/C 12H performance.
+- Shows A/B/C 24H performance.
 - C is v5.1.1 / .env.v50 / V511.
 - Auto-refreshes every 30 seconds.
 """
@@ -22,11 +22,14 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 SYMBOL = "BTC-USDT"
 
 ACCOUNTS = [
-    {"key": "A", "name": "v4.8", "env": ".env", "prefix": "v048", "symbol": "BTC-USDT"},
-    {"key": "B", "name": "v4.9", "env": ".env.v49", "prefix": "v049", "symbol": "BTC-USDT"},
-    {"key": "C", "name": "v5.1.1", "env": ".env.v50", "prefix": "V511", "symbol": "BTC-USDT"},
+    {"key": "A", "name": "BTC v4.8", "env": ".env", "prefix": "v048", "symbol": "BTC-USDT"},
+    {"key": "B", "name": "BTC v4.9", "env": ".env.v49", "prefix": "v049", "symbol": "BTC-USDT"},
+    {"key": "C", "name": "BTC v5.1.1", "env": ".env.v50", "prefix": "V511", "symbol": "BTC-USDT"},
     {"key": "D", "name": "ETH v4.8", "env": ".env", "prefix": "ETHv048", "symbol": "ETH-USDT"},
     {"key": "E", "name": "ETH v4.9", "env": ".env.v49", "prefix": "ETHv049", "symbol": "ETH-USDT"},
+    {"key": "F", "name": "ETH v5.1.1", "env": ".env.v50", "prefix": "ETHV511", "symbol": "ETH-USDT"},
+    {"key": "G", "name": "SOL v4.8", "env": ".env", "prefix": "SOLv048", "symbol": "SOL-USDT"},
+    {"key": "H", "name": "SOL v4.9", "env": ".env.v49", "prefix": "SOLv049", "symbol": "SOL-USDT"},
 ]
 
 app = Flask(__name__)
@@ -151,7 +154,7 @@ def get_dashboard():
     data = []
     for a in ACCOUNTS:
         try:
-            rows = period_fills(fetch_fills(api_for(a), a.get("symbol", SYMBOL)), 12)
+            rows = period_fills(fetch_fills(api_for(a), a.get("symbol", SYMBOL)), 24)
             r = report(rows)
             orders = get_open_orders(a)
             data.append({**a, **r, "orders": orders, "error": None})
@@ -189,47 +192,20 @@ th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-chi
 <body>
 <div class="wrap">
 <h1>ADAPTIVE GRID BOT DASHBOARD</h1>
-<div class="sub">5 BOT · BTC/ETH · DEMO · 12H · Read Only</div>
+<div class="sub">8 BOT · BTC/ETH/SOL · DEMO · 24H · Read Only</div>
 <div class="grid" id="cards"></div>
 <table>
-<thead><tr><th>Metric</th><th>A / BTC v4.8</th><th>B / BTC v4.9</th><th>C / BTC v5.1.1</th><th>D / ETH v4.8</th><th>E / ETH v4.9</th></tr></thead>
+<thead><tr><th>Metric</th><th>A / BTC v4.8</th><th>B / BTC v4.9</th><th>C / BTC v5.1.1</th><th>D / ETH v4.8</th><th>E / ETH v4.9</th><th>F / ETH v5.1.1</th><th>G / SOL v4.8</th><th>H / SOL v4.9</th></tr></thead>
 <tbody id="tbl"></tbody>
 </table>
 <p class="muted">Auto refresh: 30s · Last update: <span id="time">-</span></p>
 <button class="btn" onclick="load()">Refresh now</button>
 </div>
 <script>
-const names=["A","B","C","D","E"];
-function n(v,d=4){return v===null||v===undefined?"N/A":Number(v).toFixed(d)}
-function pct(v){return v===null||v===undefined?"N/A":Number(v).toFixed(2)+"%"}
-function pnl(v){return v===null||v===undefined?"N/A":(v>=0?"+":"")+Number(v).toFixed(6)}
-async function load(){
- const r=await fetch("/api/dashboard"); const a=await r.json();
- document.getElementById("cards").innerHTML=a.map(x=>`
- <div class="card"><h2>${x.key} / ${x.name}</h2>
- <div class="big">${x.has_data?pnl(x.pnl):"N/A"}</div>
- <div class="muted">Realized P/L · 12H</div><br>
- <span class="status">${x.key==="C"?"RUNNING DEMO":"DEMO"}</span>
- ${x.error?`<p class="warn">${x.error}</p>`:""}
- </div>`).join("");
- const metrics=[
- ["Fills",x=>x.fills],
- ["Completed cycles",x=>x.cycles],
- ["Win rate",x=>pct(x.win_rate)],
- ["Realized P/L",x=>pnl(x.pnl)],
- ["Profit factor",x=>n(x.pf,4)],
- ["Avg cycle P/L",x=>pnl(x.avg)],
- ["Best cycle",x=>pnl(x.best)],
- ["Worst cycle",x=>pnl(x.worst)],
- ["Unmatched inventory",x=>n(x.inventory,8)],
- ["Active orders",x=>x.orders.bot],
- ["BUY / SELL",x=>`${x.orders.buy} / ${x.orders.sell}`]
- ];
- document.getElementById("tbl").innerHTML=metrics.map(m=>`<tr><td>${m[0]}</td>${a.map(x=>`<td>${m[1](x)}</td>`).join("")}</tr>`).join("");
- document.getElementById("time").textContent=new Date().toLocaleString();
-}
-load();setInterval(load,30000);
-</script>
+function pnl(v){return v==null?'N/A':Number(v).toFixed(6)}
+function pct(v){return v==null?'N/A':(Number(v)*100).toFixed(2)+'%'}
+function n(v,d=4){return v==null?'N/A':Number(v).toFixed(d)}
+async function load(){try{const r=await fetch('/api/dashboard');const a=await r.json();document.getElementById('cards').innerHTML=a.map(x=>`<div class="card"><h2>${x.key} / ${x.name}</h2><div class="big">${x.has_data?pnl(x.pnl):'N/A'}</div><div class="muted">Realized P/L · 24H</div><br><span class="status">${x.key==='C'||x.key==='F'?'RUNNING DEMO':'DEMO'}</span>${x.error?`<p class="warn">${x.error}</p>`:''}</div>`).join('');const metrics=[['Fills',x=>x.fills],['Completed cycles',x=>x.cycles],['Win rate',x=>pct(x.win_rate)],['Realized P/L',x=>pnl(x.pnl)],['Profit factor',x=>n(x.pf,4)],['Avg cycle P/L',x=>pnl(x.avg)],['Best cycle',x=>pnl(x.best)],['Worst cycle',x=>pnl(x.worst)],['Unmatched inventory',x=>n(x.inventory,8)],['Active orders',x=>x.orders.bot],['BUY / SELL',x=>`${x.orders.buy} / ${x.orders.sell}`]];document.getElementById('tbl').innerHTML=metrics.map(m=>`<tr><td>${m[0]}</td>${a.map(x=>`<td>${m[1](x)}</td>`).join('')}</tr>`).join('');document.getElementById('time').textContent=new Date().toLocaleString()}catch(e){document.getElementById('cards').innerHTML=`<p class="warn">Dashboard error: ${e}</p>`}}load();setInterval(load,30000);</script>
 </body></html>
 """
 
