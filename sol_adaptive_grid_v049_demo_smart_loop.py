@@ -18,10 +18,10 @@ from market_data import get_candles, candles_to_dataframe
 # ============================================================
 # ADAPTIVE GRID BOT v4.9 - ETH/USDT
 # DEMO SMART RECONCILIATION LOOP
-# Built from the BTC v4.9 architecture, ETH-specific adapter.
+# Built from the BTC v4.9 architecture, SOL-specific adapter.
 # ============================================================
 
-INST_ID = "ETH-USDT"
+INST_ID = "SOL-USDT"
 
 STRATEGY_CAPITAL_USDT = Decimal("1000.00")
 MAX_EXPOSURE_USDT = Decimal("500.00")
@@ -41,7 +41,7 @@ GRID_NORMAL = Decimal("0.0010")
 GRID_HIGH = Decimal("0.0020")
 GRID_EXTREME = Decimal("0.0030")
 
-GRID_STATE_FILE = "eth_adaptive_grid_v049_demo_state.json"
+GRID_STATE_FILE = "sol_adaptive_grid_v049_demo_state.json"
 REBUILD_AFTER_GRID_STEPS = Decimal("1.0")
 
 
@@ -311,7 +311,7 @@ def apply_inventory_protection(missing, open_orders, eth_balance, price):
 
     print()
     print("=" * 76)
-    print("ETH v4.9 INVENTORY PROTECTION")
+    print("SOL v4.9 INVENTORY PROTECTION")
     print("=" * 76)
     print(f"Actual ETH        : {actual_eth}")
     print(f"Pending BUY ETH   : {pending_buy_eth}")
@@ -343,12 +343,12 @@ def apply_inventory_protection(missing, open_orders, eth_balance, price):
 def run_cycle(manager, cycle, dry_run=False):
     print()
     print("=" * 76)
-    print(f" ETH v4.9 DEMO SMART LOOP CYCLE {cycle} ")
+    print(f" SOL v4.9 DEMO SMART LOOP CYCLE {cycle} ")
     print(f" {time.strftime('%Y-%m-%d %H:%M:%S')} ")
     print("=" * 76)
 
     if os.getenv("OKX_FLAG") != "1":
-        raise RuntimeError("ABORTED: ETH v4.9 only permits OKX DEMO (OKX_FLAG=1).")
+        raise RuntimeError("ABORTED: SOL v4.9 only permits OKX DEMO (OKX_FLAG=1).")
 
     open_orders = manager.get_open_orders()
     print(f"Open orders       : {len(open_orders)}")
@@ -417,7 +417,7 @@ def run_cycle(manager, cycle, dry_run=False):
     if dry_run:
         print()
         print("=" * 76)
-        print("ETH v4.9 DRY RUN - NO ORDERS SUBMITTED")
+        print("SOL v4.9 DRY RUN - NO ORDERS SUBMITTED")
         print("=" * 76)
         for order in missing:
             print(
@@ -428,7 +428,7 @@ def run_cycle(manager, cycle, dry_run=False):
 
     print()
     print("=" * 76)
-    print("ETH v4.9 SUBMITTING DEMO ORDERS")
+    print("SOL v4.9 SUBMITTING DEMO ORDERS")
     print("=" * 76)
 
     for order in missing:
@@ -484,7 +484,7 @@ def smart_loop_main():
         try:
             run_cycle(manager, cycle, dry_run=args.dry_run)
         except KeyboardInterrupt:
-            print("\nETH v4.9 SMART DEMO LOOP STOPPED")
+            print("\nSOL v4.9 SMART DEMO LOOP STOPPED")
             break
         except Exception as exc:
             print(f"[LOOP ERROR] {exc}")
