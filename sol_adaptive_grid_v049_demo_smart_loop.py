@@ -8,15 +8,15 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Load v4.9 demo credentials before importing the ETH exchange adapter.
+# Load v4.9 demo credentials before importing the SOL exchange adapter.
 load_dotenv(".env.v49", override=True)
 
-from eth_order_manager_v049 import OrderManager
+from sol_order_manager_v049 import OrderManager
 from market_data import get_candles, candles_to_dataframe
 
 
 # ============================================================
-# ADAPTIVE GRID BOT v4.9 - ETH/USDT
+# ADAPTIVE GRID BOT v4.9 - SOL/USDT
 # DEMO SMART RECONCILIATION LOOP
 # Built from the BTC v4.9 architecture, SOL-specific adapter.
 # ============================================================
@@ -58,7 +58,7 @@ def get_market_data():
     df = candles_to_dataframe(candles)
 
     if len(df) < ATR_PERIOD + 1:
-        raise RuntimeError(f"Not enough ETH candles: {len(df)}")
+        raise RuntimeError(f"Not enough SOL candles: {len(df)}")
 
     previous_close = df["close"].shift(1)
     tr1 = df["high"] - df["low"]
@@ -179,7 +179,7 @@ def get_target_grid(open_orders, manager):
     if anchor is None and len(open_orders) >= 10:
         anchor = infer_anchor_from_orders(open_orders, manager)
         if anchor is not None:
-            print(f"[STATE RECOVERED] ETH anchor: ${anchor:,.2f}")
+            print(f"[STATE RECOVERED] SOL anchor: ${anchor:,.2f}")
 
     rebuild = should_rebuild_grid(
         current_price=price,
@@ -198,9 +198,9 @@ def get_target_grid(open_orders, manager):
             "grid_percent": str(grid_percent),
         }
         save_grid_state(state)
-        print(f"[GRID REBUILD] ETH anchor: ${anchor:,.2f}")
+        print(f"[GRID REBUILD] SOL anchor: ${anchor:,.2f}")
     else:
-        print(f"[GRID HOLD] ETH anchor: ${anchor:,.2f}")
+        print(f"[GRID HOLD] SOL anchor: ${anchor:,.2f}")
 
     return {
         "price": price,
@@ -313,9 +313,9 @@ def apply_inventory_protection(missing, open_orders, eth_balance, price):
     print("=" * 76)
     print("SOL v4.9 INVENTORY PROTECTION")
     print("=" * 76)
-    print(f"Actual ETH        : {actual_eth}")
-    print(f"Pending BUY ETH   : {pending_buy_eth}")
-    print(f"Inventory ETH     : {inventory_eth}")
+    print(f"Actual SOL        : {actual_eth}")
+    print(f"Pending BUY SOL   : {pending_buy_eth}")
+    print(f"Inventory SOL     : {inventory_eth}")
     print(f"Inventory Value   : ${inventory_usdt:,.2f}")
     print(f"Inventory Cap     : ${MAX_INVENTORY_USDT:,.2f}")
     print(f"Projected Value   : ${projected:,.2f}")
@@ -335,7 +335,7 @@ def apply_inventory_protection(missing, open_orders, eth_balance, price):
     print(f"SELL Allowed      : {len(allowed_sells)}")
 
     if sell_missing and not allowed_sells:
-        print("[SELL PROTECTION] SELL orders blocked: insufficient actual ETH inventory.")
+        print("[SELL PROTECTION] SELL orders blocked: insufficient actual SOL inventory.")
 
     return allowed_buys + allowed_sells
 
@@ -354,7 +354,7 @@ def run_cycle(manager, cycle, dry_run=False):
     print(f"Open orders       : {len(open_orders)}")
 
     state = get_target_grid(open_orders, manager)
-    print(f"ETH price         : ${state['price']:,.2f}")
+    print(f"SOL price         : ${state['price']:,.2f}")
     print(f"ATR               : ${state['atr']:,.2f}")
     print(f"ATR / Price       : {state['atr_percent'] * 100:.4f}%")
     print(f"Regime            : {state['regime']}")
@@ -373,13 +373,13 @@ def run_cycle(manager, cycle, dry_run=False):
         stale = []
 
     if dry_run and stale:
-        print(f"[DRY RUN] Would cancel {len(stale)} stale ETH order(s); none will be cancelled.")
+        print(f"[DRY RUN] Would cancel {len(stale)} stale SOL order(s); none will be cancelled.")
         stale = []
 
     for order in stale:
         ord_id = order.get("ordId")
         if not ord_id:
-            print("[SAFE SKIP] Stale ETH order has no ID.")
+            print("[SAFE SKIP] Stale SOL order has no ID.")
             missing = []
             continue
         try:
@@ -402,7 +402,7 @@ def run_cycle(manager, cycle, dry_run=False):
         missing = missing[:capacity]
 
     balances = manager.get_balances()
-    eth_balance = balances.get("ETH", D("0"))
+    eth_balance = balances.get("SOL", D("0"))
     missing = apply_inventory_protection(
         missing,
         current_orders,
@@ -411,7 +411,7 @@ def run_cycle(manager, cycle, dry_run=False):
     )
 
     if not missing:
-        print("[NO CHANGE] No ETH orders need to be placed.")
+        print("[NO CHANGE] No SOL orders need to be placed.")
         return
 
     if dry_run:
@@ -453,7 +453,7 @@ def run_cycle(manager, cycle, dry_run=False):
 
 
 def smart_loop_main():
-    parser = argparse.ArgumentParser(description="ETH Adaptive Grid Bot v4.9 Demo")
+    parser = argparse.ArgumentParser(description="SOL Adaptive Grid Bot v4.9 Demo")
     parser.add_argument("--once", action="store_true", help="Run exactly one cycle")
     parser.add_argument("--dry-run", action="store_true", help="Calculate/reconcile only; never submit or cancel orders")
     parser.add_argument("--loop", action="store_true", help="Run continuously every 30 seconds")
@@ -463,7 +463,7 @@ def smart_loop_main():
 
     print()
     print("=" * 76)
-    print("       ADAPTIVE GRID BOT v4.9 - ETH/USDT")
+    print("       ADAPTIVE GRID BOT v4.9 - SOL/USDT")
     print("          OKX DEMO SMART RECONCILIATION")
     print("=" * 76)
     print("Mode           : OKX DEMO ONLY")
