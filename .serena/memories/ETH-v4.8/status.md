@@ -1,0 +1,1 @@
+ETH-USDT v4.8: steps 1-11 complete; backtest validation passed after correcting look-ahead issue. Current backtest: 300 1H candles, 10 cycles, 80% win rate, +2.646469 USDT realized P/L, PF 1.7610, max drawdown 3.575125 USDT, 0 ETH inventory. Next step is Order Manager, then Demo Live. Keep BTC bot untouched; ETH remains separate and read-only until explicitly moved to OKX Demo.

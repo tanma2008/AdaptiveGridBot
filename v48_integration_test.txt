@@ -1,0 +1,73 @@
+============================================================================
+       ADAPTIVE GRID BOT v4.8 BOSS
+          BTC + ETH + SOL / OKX DEMO
+============================================================================
+Mode             : OKX DEMO ONLY
+Order size       : $10.00
+Grid             : 10 BUY / 10 SELL
+Execution        : READ ONLY / DRY RUN
+Safety           : no cancel-all; inventory protected
+
+Balances:
+  USDT = 6885.050442745265
+  BTC  = 3.000933725536
+  ETH  = 14.9440239312
+  SOL  = 8.7244805652
+----------------------------------------------------------------------------
+A / v4.8 | BTC-USDT
+Price            : $79,816.000000
+ATR30D           : $2,099.993912
+ATR / Price      : 2.6310%
+Regime           : HIGH
+Grid distance    : 0.2000%
+Open bot orders  : 20 (10 BUY / 10 SELL)
+Exposure         : $200.00 / $500.00
+Available BTC  : 3.000933725536
+Grid target      : 20 orders
+Missing BUY      : 0
+Missing SELL     : 0
+Reconciled       : 0 removed, 0 amended
+Validated plan   : 0 new orders
+----------------------------------------------------------------------------
+D / ETH v4.8 | ETH-USDT
+Price            : $2,497.560000
+ATR30D           : $77.901225
+ATR / Price      : 3.1191%
+Regime           : EXTREME
+Grid distance    : 0.3000%
+Open bot orders  : 20 (10 BUY / 10 SELL)
+Exposure         : $200.00 / $500.00
+Available ETH  : 14.9440239312
+Grid target      : 20 orders
+Missing BUY      : 0
+Missing SELL     : 0
+Reconciled       : 0 removed, 0 amended
+Validated plan   : 0 new orders
+----------------------------------------------------------------------------
+G / SOL v4.8 | SOL-USDT
+Price            : $105.440000
+ATR30D           : $3.136579
+ATR / Price      : 2.9748%
+Regime           : HIGH
+Grid distance    : 0.2000%
+Open bot orders  : 19 (10 BUY / 9 SELL)
+Exposure         : $190.00 / $500.00
+Available SOL  : 8.7244805652
+Grid target      : 20 orders
+Missing BUY      : 0
+Missing SELL     : 0
+Reconciled       : 0 removed, 0 amended
+Validated plan   : 0 new orders
+
+============================================================================
+v4.8 BOSS SUMMARY
+============================================================================
+A | BTC-USDT | HIGH    | open=20 (10 BUY/10 SELL) | planned= 0 | exposure=$200.00
+D | ETH-USDT | EXTREME | open=20 (10 BUY/10 SELL) | planned= 0 | exposure=$200.00
+G | SOL-USDT | HIGH    | open=19 (10 BUY/ 9 SELL) | planned= 0 | exposure=$190.00
+----------------------------------------------------------------------------
+OPEN ORDERS STATUS
+BTC-USDT : 20 orders = 10 BUY + 10 SELL
+ETH-USDT : 20 orders = 10 BUY + 10 SELL
+SOL-USDT : 19 orders = 10 BUY +  9 SELL
+TOTAL    : 59 orders

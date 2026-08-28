@@ -1,0 +1,1 @@
+ETH-USDT v4.8 follows the existing AdaptiveGridBot staged plan: API -> Account -> Market -> Historical Data -> EMA50/200 -> ATR30D -> Adaptive Grid -> Position Sizing -> Risk Engine -> Paper Trading -> Backtest -> Order Manager -> Demo Live. Current work is ETH v4.8 and remains read-only/no live orders until later stages are explicitly completed and tested.
