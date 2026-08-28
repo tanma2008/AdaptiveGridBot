@@ -1,0 +1,22 @@
+[Unit]
+Description=AdaptiveGridBot v4.8 BTC ETH SOL (OKX DEMO)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=adaptivebot
+Group=adaptivebot
+WorkingDirectory=/opt/adaptive-grid-bot
+EnvironmentFile=/opt/adaptive-grid-bot/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/adaptive-grid-bot/.venv/bin/python adaptive_grid_v048_boss_demo_smart_loop.py --loop
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

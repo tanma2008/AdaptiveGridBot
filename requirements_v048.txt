@@ -1,0 +1,7 @@
+# AdaptiveGridBot v4.8 BTC + ETH + SOL
+# Runtime dependencies for Linux deployment
+pandas==3.0.5
+numpy==2.5.2
+python-dotenv==1.2.3
+okx==2.1.2
+python-okx==0.4.3
