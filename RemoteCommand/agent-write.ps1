@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("ensure-workdir", "list-workdir", "write-text")]
     [string]$Action,
@@ -8,9 +8,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$HostName = "100.105.241.85"
+$HostName = "10.4.24.8"
 $User = "root"
-$WorkRoot = "/opt/adaptivegridbot"
+$WorkRoot = "/home/amnat/AdaptiveGridBot"
 
 function Assert-SafeRelativePath {
     param([string]$Path)
@@ -77,3 +77,4 @@ switch ($Action) {
         exit $LASTEXITCODE
     }
 }
+

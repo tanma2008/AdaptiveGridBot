@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Adaptive Grid Bot - Read-only Web Dashboard
 Designed for the existing Linux server running v5.1.1.
@@ -197,13 +197,13 @@ th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-chi
 <body>
 <div class="wrap">
 <h1>ADAPTIVE GRID BOT DASHBOARD</h1>
-<div class="sub">6 BOT ยท BTC/ETH ยท DEMO ยท 12H ยท Read Only</div>
+<div class="sub">6 BOT · BTC/ETH · DEMO · 12H · Read Only</div>
 <div class="grid" id="cards"></div>
 <table>
 <thead><tr><th>Metric</th><th>A / BTC v4.8</th><th>B / BTC v4.9</th><th>C / BTC v5.1.1</th><th>D / ETH v4.8</th><th>E / ETH v4.9</th><th>F / ETH v5.1.1</th></tr></thead>
 <tbody id="tbl"></tbody>
 </table>
-<p class="muted">Auto refresh: 30s ยท Last update: <span id="time">-</span></p>
+<p class="muted">Auto refresh: 30s · Last update: <span id="time">-</span></p>
 <button class="btn" onclick="load()">Refresh now</button>
 </div>
 <script>
@@ -216,8 +216,8 @@ async function load(){
  document.getElementById("cards").innerHTML=a.map(x=>`
  <div class="card"><h2>${x.key} / ${x.name}</h2>
  <div class="big">${x.has_data?pnl(x.pnl):"N/A"}</div>
- <div class="muted">Realized P/L ยท 12H</div><br>
- <span class="status">${x.orders && x.orders.bot>0?"RUNNING DEMO":"DEMO"}</span>
+ <div class="muted">Realized P/L · 12H</div><br>
+ <span class="status">${x.key==="C"?"RUNNING DEMO":"DEMO"}</span>
  ${x.error?`<p class="warn">${x.error}</p>`:""}
  </div>`).join("");
  const metrics=[
@@ -252,4 +252,3 @@ def api_dashboard():
 if __name__ == "__main__":
     port = int(os.getenv("DASHBOARD_PORT", "8080"))
     app.run(host="0.0.0.0", port=port)
-

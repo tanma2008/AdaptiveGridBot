@@ -1,8 +1,8 @@
-{
+﻿{
   "name": "adaptivegridbot-remote-linux",
   "version": "0.3.0",
-  "mode": "read-only",
-  "target": "root@100.105.241.85",
+  "mode": "remote-linux",
+  "target": "root@10.4.24.8",
   "transport": "ssh-over-tailscale",
   "actions": [
     "status",
@@ -16,3 +16,4 @@
   "write_enabled": false,
   "admin_enabled": false
 }
+

@@ -25,6 +25,7 @@ BOTS = [
 def main():
     parser = argparse.ArgumentParser(description="Adaptive Grid Bot v4.9 Boss - BTC/ETH/SOL")
     parser.add_argument("--once", action="store_true", help="Run one cycle per bot")
+    parser.add_argument("--loop", action="store_true", help="Repeat cycles every 30 seconds")
     parser.add_argument("--dry-run", action="store_true", help="Never submit or cancel orders")
     args = parser.parse_args()
 
@@ -76,6 +77,15 @@ def main():
             process.wait()
         raise SystemExit(130)
 
+    if args.loop and not failed:
+        import time
+        while True:
+            time.sleep(30)
+            processes = []
+            for name, script in BOTS:
+                print(f"[START] {name} -  {name} - {return_code}", flush=True)
+                if return_code != 0:
+                    raise SystemExit(1)
     raise SystemExit(1 if failed else 0)
 
 

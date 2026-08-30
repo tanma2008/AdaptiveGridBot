@@ -8,7 +8,7 @@
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot ".." )).Path
-$HostName = "100.105.241.85"
+$HostName = "10.4.24.8"
 $User = "root"
 $RemoteRoot = "/home/amnat/AdaptiveGridBot"
 
@@ -68,6 +68,7 @@ Write-Host "----------------------------------------"
 Write-Host "Exit Code : $exitCode"
 Write-Host "========================================"
 exit $exitCode
+
 
 
 

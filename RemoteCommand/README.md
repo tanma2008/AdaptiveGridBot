@@ -1,24 +1,26 @@
 # RemoteCommand
 
-Remote read-only command bridge from Windows to Linux `r740` over Tailscale.
+Windows → Linux `r740` remote workflow over SSH key.
 
-Target: `root@100.105.241.85`
+Target: `root@10.4.24.8`
 
-## Allowed actions
+Canonical bot workspace: `/home/amnat/AdaptiveGridBot`
 
-- `status` — hostname, user, uptime
-- `hostname` — hostname
-- `docker` — running Docker containers
-- `disk` — filesystem usage for `/`
-- `memory` — memory usage
-- `uptime` — uptime
-- `network` — network addresses
-
-## Usage
+## Main interface
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\RemoteCommand\remote-linux.ps1 status
-powershell.exe -ExecutionPolicy Bypass -File .\RemoteCommand\remote-linux.ps1 docker
+powershell.exe -ExecutionPolicy Bypass -File .\RemoteCommand\serena-remote.ps1 status
+powershell.exe -ExecutionPolicy Bypass -File .\RemoteCommand\serena-remote.ps1 test-write
+powershell.exe -ExecutionPolicy Bypass -File .\RemoteCommand\serena-remote.ps1 copy -Source .\adaptive_grid_v048_boss_demo_smart_loop.py -Destination adaptive_grid_v048_boss_demo_smart_loop.py
+powershell.exe -ExecutionPolicy Bypass -File .\RemoteCommand\serena-remote.ps1 run-status -Script adaptive_grid_v048_boss_demo_smart_loop.py
+powershell.exe -ExecutionPolicy Bypass -File .\RemoteCommand\serena-remote.ps1 run-log -Script adaptive_grid_v048_boss_demo_smart_loop.py
 ```
 
-This layer intentionally does not accept arbitrary shell commands. Write, restart, stop, delete, and other administrative operations remain disabled.
+## Safety
+
+- SSH uses the configured Windows SSH key.
+- Copy is restricted to files inside the local AdaptiveGridBot project.
+- Destination is restricted to `/home/amnat/AdaptiveGridBot`.
+- Common secret/credential files are blocked.
+- Bot start/stop is explicit and only accepts a simple `.py` filename.
+- No arbitrary shell command is exposed by the interface.
