@@ -1,0 +1,1 @@
+Remote runner design: target r740 /home/amnat/AdaptiveGridBot, execute with /home/amnat/AdaptiveGridBot/.venv/bin/python. PC-side start/status/log/stop should work without AnyDesk/SecureCRT. Avoid nested PowerShell/Bash here-strings and Bash $ variables; use simple SSH commands with pgrep/pkill/nohup.

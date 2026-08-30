@@ -1,0 +1,1 @@
+Local AI i7 dashboard N/A fix applied: active bots display zero-valued metrics instead of N/A; no-data inactive bots remain N/A.

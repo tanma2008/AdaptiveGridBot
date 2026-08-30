@@ -1,0 +1,1 @@
+User wants v4.9 merged Boss BTC+ETH+SOL first, then v5.0. Must edit and self-test before asking user to run. Structure: A BTC, D ETH, G SOL into one v4.9 Boss. Preserve each bot's v4.9 strategy logic rather than assuming identical code.

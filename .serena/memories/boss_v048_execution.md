@@ -1,0 +1,1 @@
+Need add robust per-order handling to adaptive_grid_v048_boss_demo_smart_loop.py so one network timeout does not abort cycle. Preserve successful orders, continue to ETH/SOL, and rely on next reconciliation to fill missing orders; avoid blind retry after timeout.
