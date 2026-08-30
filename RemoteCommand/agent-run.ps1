@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory=$true)]
     [ValidateSet('start','status','stop','log')]
     [string]$Action,
@@ -7,7 +7,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$HostName = '100.74.181.112'
+$HostName = '10.4.24.8'
 $User = 'root'
 $RemoteRoot = '/home/amnat/AdaptiveGridBot'
 $Python = "$RemoteRoot/.venv/bin/python"
@@ -106,3 +106,4 @@ Write-Host '----------------------------------------'
 Write-Host "Exit Code : $exitCode"
 Write-Host '========================================'
 exit $exitCode
+

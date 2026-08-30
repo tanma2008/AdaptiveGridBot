@@ -235,42 +235,10 @@ def amend_order(trade, symbol, order, price, qty=None):
 
 
 def get_open_orders(trade, symbol):
-    """Read open orders with a short retry for transient OKX API failures."""
-    import time
-
-    max_attempts = 3
-    retry_codes = {"50001"}
-
-    for attempt in range(1, max_attempts + 1):
-        try:
-            response = trade.get_order_list(instId=symbol)
-        except Exception as exc:
-            if attempt >= max_attempts:
-                raise RuntimeError(
-                    f"Open orders failed for {symbol} after {max_attempts} attempts: {exc}"
-                ) from exc
-            print(
-                f"  [WARN] Open orders API error for {symbol}; "
-                f"retry {attempt}/{max_attempts - 1}..."
-            )
-            time.sleep(attempt * 2)
-            continue
-
-        if response.get("code") == "0":
-            return response.get("data", [])
-
-        code = str(response.get("code", ""))
-        if code in retry_codes and attempt < max_attempts:
-            print(
-                f"  [WARN] OKX open orders temporarily unavailable for {symbol} "
-                f"(code {code}); retry {attempt}/{max_attempts - 1}..."
-            )
-            time.sleep(attempt * 2)
-            continue
-
+    response = trade.get_order_list(instId=symbol)
+    if response.get("code") != "0":
         raise RuntimeError(f"Open orders failed for {symbol}: {response}")
-
-    raise RuntimeError(f"Open orders failed for {symbol}: exhausted retries")
+    return response.get("data", [])
 
 
 def bot_open_orders(open_orders, prefix):

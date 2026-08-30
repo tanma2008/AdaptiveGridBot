@@ -28,9 +28,6 @@ ACCOUNTS = [
     {"key": "D", "name": "ETH v4.8", "env": ".env", "prefix": "ETHv048", "symbol": "ETH-USDT"},
     {"key": "E", "name": "ETH v4.9", "env": ".env.v49", "prefix": "ETHv049", "symbol": "ETH-USDT"},
     {"key": "F", "name": "ETH v5.1.1", "env": ".env.v50", "prefix": "F511", "symbol": "ETH-USDT"},
-    {"key": "G", "name": "SOL v4.8", "env": ".env", "prefix": "", "symbol": "SOL-USDT", "all_symbol_orders": True},
-    {"key": "H", "name": "SOL v4.9", "env": ".env.v49", "prefix": "", "symbol": "SOL-USDT", "all_symbol_orders": True},
-    {"key": "I", "name": "SOL v5.1.1", "env": ".env.v50", "prefix": "", "symbol": "SOL-USDT", "all_symbol_orders": True},
 ]
 
 app = Flask(__name__)
@@ -152,7 +149,7 @@ def get_open_orders(account):
         if r.get("code") != "0":
             return {"all": 0, "bot": 0, "buy": 0, "sell": 0}
         rows = [x for x in r.get("data", []) if x.get("instId") == symbol]
-        bot = rows if account.get("all_symbol_orders") else [x for x in rows if str(x.get("clOrdId", "")).startswith(account["prefix"])]
+        bot = [x for x in rows if str(x.get("clOrdId", "")).startswith(account["prefix"])]
         return {"all": len(rows), "bot": len(bot), "buy": sum(x.get("side") == "buy" for x in bot), "sell": sum(x.get("side") == "sell" for x in bot)}
     except Exception:
         return {"all": 0, "bot": 0, "buy": 0, "sell": 0}
@@ -162,10 +159,9 @@ def get_dashboard():
     data = []
     for a in ACCOUNTS:
         try:
-            rows = period_fills(fetch_fills(api_for(a), a.get("symbol", SYMBOL)), 24)
+            rows = period_fills(fetch_fills(api_for(a), a.get("symbol", SYMBOL)), 12)
             r = report(rows)
             orders = get_open_orders(a)
-            r["has_data"] = bool(rows or orders["bot"])
             data.append({**a, **r, "orders": orders, "error": None})
         except Exception as e:
             data.append({**a, "fills": 0, "cycles": 0, "win_rate": None,
@@ -201,17 +197,17 @@ th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-chi
 <body>
 <div class="wrap">
 <h1>ADAPTIVE GRID BOT DASHBOARD</h1>
-<div class="sub">9 BOT · BTC/ETH/SOL · DEMO · 24H · Read Only · BTC/ETH/SOL · DEMO · 24H · Read Only</div>
+<div class="sub">6 BOT · BTC/ETH · DEMO · 12H · Read Only</div>
 <div class="grid" id="cards"></div>
 <table>
-<thead><tr id="head"><th>Metric</th></tr></thead>
+<thead><tr><th>Metric</th><th>A / BTC v4.8</th><th>B / BTC v4.9</th><th>C / BTC v5.1.1</th><th>D / ETH v4.8</th><th>E / ETH v4.9</th><th>F / ETH v5.1.1</th></tr></thead>
 <tbody id="tbl"></tbody>
 </table>
-<p class="muted">Auto refresh: 30s ยท Last update: <span id="time">-</span></p>
+<p class="muted">Auto refresh: 30s · Last update: <span id="time">-</span></p>
 <button class="btn" onclick="load()">Refresh now</button>
 </div>
 <script>
-const names=["A","B","C","D","E","F","G","H","I"];
+const names=["A","B","C","D","E"];
 function n(v,d=4){return v===null||v===undefined?"N/A":Number(v).toFixed(d)}
 function pct(v){return v===null||v===undefined?"N/A":Number(v).toFixed(2)+"%"}
 function pnl(v){return v===null||v===undefined?"N/A":(v>=0?"+":"")+Number(v).toFixed(6)}
@@ -219,13 +215,24 @@ async function load(){
  const r=await fetch("/api/dashboard"); const a=await r.json();
  document.getElementById("cards").innerHTML=a.map(x=>`
  <div class="card"><h2>${x.key} / ${x.name}</h2>
- <div class="big">${pnl(x.pnl===null?0:x.pnl)}</div>
- <div class="muted">Realized P/L · 24H</div><br>
- <span class="status">DEMO</span>
+ <div class="big">${x.has_data?pnl(x.pnl):"N/A"}</div>
+ <div class="muted">Realized P/L · 12H</div><br>
+ <span class="status">${x.key==="C"?"RUNNING DEMO":"DEMO"}</span>
  ${x.error?`<p class="warn">${x.error}</p>`:""}
  </div>`).join("");
- const metrics=[["Fills",x=>x.fills],["Completed cycles",x=>x.cycles],["Win rate",x=>pct(x.win_rate)],["Realized P/L",x=>pnl(x.pnl)],["Profit factor",x=>n(x.pf,4)],["Avg cycle P/L",x=>pnl(x.avg)],["Best cycle",x=>pnl(x.best)],["Worst cycle",x=>pnl(x.worst)],["Unmatched inventory",x=>n(x.inventory,8)],["Active orders",x=>x.orders.bot],["BUY / SELL",x=>`${x.orders.buy} / ${x.orders.sell}`]];
- document.getElementById("head").innerHTML="<th>Metric</th>"+a.map(x=>`<th>${x.key} / ${x.symbol.replace("-USDT","")} ${x.name}</th>`).join("");
+ const metrics=[
+ ["Fills",x=>x.fills],
+ ["Completed cycles",x=>x.cycles],
+ ["Win rate",x=>pct(x.win_rate)],
+ ["Realized P/L",x=>pnl(x.pnl)],
+ ["Profit factor",x=>n(x.pf,4)],
+ ["Avg cycle P/L",x=>pnl(x.avg)],
+ ["Best cycle",x=>pnl(x.best)],
+ ["Worst cycle",x=>pnl(x.worst)],
+ ["Unmatched inventory",x=>n(x.inventory,8)],
+ ["Active orders",x=>x.orders.bot],
+ ["BUY / SELL",x=>`${x.orders.buy} / ${x.orders.sell}`]
+ ];
  document.getElementById("tbl").innerHTML=metrics.map(m=>`<tr><td>${m[0]}</td>${a.map(x=>`<td>${m[1](x)}</td>`).join("")}</tr>`).join("");
  document.getElementById("time").textContent=new Date().toLocaleString();
 }
@@ -245,4 +252,3 @@ def api_dashboard():
 if __name__ == "__main__":
     port = int(os.getenv("DASHBOARD_PORT", "8080"))
     app.run(host="0.0.0.0", port=port)
-

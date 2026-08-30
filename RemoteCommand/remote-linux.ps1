@@ -1,10 +1,10 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("status", "hostname", "docker", "disk", "memory", "uptime", "network")]
     [string]$Action
 )
 
-$HostName = "100.105.241.85"
+$HostName = "10.4.24.8"
 $User = "root"
 
 $Commands = @{
@@ -36,3 +36,4 @@ Write-Host "Exit Code : $exitCode"
 Write-Host "========================================"
 
 exit $exitCode
+

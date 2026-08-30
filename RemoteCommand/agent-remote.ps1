@@ -1,11 +1,11 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("status", "hostname", "docker", "disk", "memory", "uptime", "network", "health")]
     [string]$Action
 )
 
 $ErrorActionPreference = "Stop"
-$HostName = "100.105.241.85"
+$HostName = "10.4.24.8"
 $User = "root"
 $Bridge = Join-Path $PSScriptRoot "remote-linux.ps1"
 
@@ -54,3 +54,4 @@ else {
     Write-Host "Health Check : OK"
     exit 0
 }
+
