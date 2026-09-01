@@ -201,13 +201,13 @@ th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-chi
 <body>
 <div class="wrap">
 <h1>ADAPTIVE GRID BOT DASHBOARD</h1>
-<div class="sub">9 BOT · BTC/ETH/SOL · DEMO · 24H · Read Only · BTC/ETH/SOL · DEMO · 24H · Read Only</div>
+<div class="sub">9 BOT · BTC / ETH / SOL · DEMO · 24H · READ ONLY</div>
 <div class="grid" id="cards"></div>
 <table>
 <thead><tr id="head"><th>Metric</th></tr></thead>
 <tbody id="tbl"></tbody>
 </table>
-<p class="muted">Auto refresh: 30s ยท Last update: <span id="time">-</span></p>
+<p class="muted">Auto refresh: 30s · Last update: <span id="time">-</span></p>
 <button class="btn" onclick="load()">Refresh now</button>
 </div>
 <script>
