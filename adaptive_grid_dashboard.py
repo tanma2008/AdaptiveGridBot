@@ -5,7 +5,7 @@ Designed for the existing Linux server running v5.1.1.
 
 - No OKX order placement/cancellation.
 - Reads the same .env files used by the report.
-- Shows A/B/C 24H performance.
+- Shows 9 BOT 24H performance.
 - C is v5.1.1 / .env.v50 / V511.
 - Auto-refreshes every 30 seconds.
 """
@@ -30,10 +30,17 @@ ACCOUNTS = [
     {"key": "F", "name": "ETH v5.1.1", "env": ".env.v50", "prefix": "ETHV511", "symbol": "ETH-USDT"},
     {"key": "G", "name": "SOL v4.8", "env": ".env", "prefix": "SOLv048", "symbol": "SOL-USDT"},
     {"key": "H", "name": "SOL v4.9", "env": ".env.v49", "prefix": "SOLv049", "symbol": "SOL-USDT"},
+    {"key": "I", "name": "SOL v5.1.1", "env": ".env.v50", "prefix": "SOLV511", "symbol": "SOL-USDT"},
 ]
 
 app = Flask(__name__)
 D = Decimal
+
+@app.after_request
+def add_no_cache(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    return response
 
 
 def api_for(account):
@@ -175,37 +182,32 @@ HTML = r"""
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Adaptive Grid Bot Dashboard</title>
 <style>
-body{margin:0;background:#0b1020;color:#e8edf7;font-family:Arial,sans-serif}
-.wrap{max-width:1200px;margin:auto;padding:24px}
-h1{margin:0 0 6px}.sub{color:#9aa6bd;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.card{background:#151c2f;border:1px solid #29344e;border-radius:14px;padding:18px}
-.card h2{margin-top:0}.big{font-size:30px;font-weight:700}
-.ok{color:#48d597}.muted{color:#9aa6bd}.warn{color:#ffca62}
-table{width:100%;border-collapse:collapse;margin-top:18px;background:#151c2f;border-radius:14px;overflow:hidden}
-th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-child,td:first-child{text-align:left}
-.btn{background:#25304a;color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer}
-.status{display:inline-block;padding:4px 8px;border-radius:99px;background:#173a31;color:#6de4b0}
-@media(max-width:800px){.grid{grid-template-columns:1fr}}
+body{margin:0;background:#0b1020;color:#e8edf7;font-family:Arial,sans-serif}.wrap{max-width:1200px;margin:auto;padding:24px}h1{margin:0 0 6px}.sub{color:#9aa6bd;margin-bottom:20px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}.summary .box{background:#151c2f;border:1px solid #29344e;border-radius:14px;padding:18px}.summary .value{font-size:28px;font-weight:700}.profit{color:#48d597}.loss{color:#ff6b7a}.waiting{color:#8db8ff}.muted{color:#9aa6bd}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:#151c2f;border:1px solid #29344e;border-radius:14px;padding:18px}.card h2{margin:0 0 10px}.big{font-size:30px;font-weight:700}.status{display:inline-block;padding:5px 9px;border-radius:99px;background:#24304a}.status.profit{background:#173a31}.status.loss{background:#42222b}.status.running{background:#1e3152}.status.idle{background:#30313a}table{width:100%;border-collapse:collapse;margin-top:18px;background:#151c2f;border-radius:14px;overflow:hidden}th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-child,td:first-child{text-align:left}.btn{background:#25304a;color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer}@media(max-width:800px){.grid,.summary{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>ADAPTIVE GRID BOT DASHBOARD</h1>
-<div class="sub">8 BOT · BTC/ETH/SOL · DEMO · 24H · Read Only</div>
+<div class="sub">9 BOT · BTC / ETH / SOL · DEMO · 24H · Read Only</div>
+<div class="summary" id="summary"></div>
 <div class="grid" id="cards"></div>
 <table>
-<thead><tr><th>Metric</th><th>A / BTC v4.8</th><th>B / BTC v4.9</th><th>C / BTC v5.1.1</th><th>D / ETH v4.8</th><th>E / ETH v4.9</th><th>F / ETH v5.1.1</th><th>G / SOL v4.8</th><th>H / SOL v4.9</th></tr></thead>
+<thead><tr><th>Bot</th><th>Status</th><th>24H P/L</th><th>Closed cycles</th><th>Active orders</th><th>Inventory</th></tr></thead>
 <tbody id="tbl"></tbody>
 </table>
 <p class="muted">Auto refresh: 30s · Last update: <span id="time">-</span></p>
 <button class="btn" onclick="load()">Refresh now</button>
 </div>
 <script>
-function pnl(v){return v==null?'N/A':Number(v).toFixed(6)}
-function pct(v){return v==null?'N/A':(Number(v)*100).toFixed(2)+'%'}
-function n(v,d=4){return v==null?'N/A':Number(v).toFixed(d)}
-async function load(){try{const r=await fetch('/api/dashboard');const a=await r.json();document.getElementById('cards').innerHTML=a.map(x=>`<div class="card"><h2>${x.key} / ${x.name}</h2><div class="big">${x.has_data?pnl(x.pnl):'N/A'}</div><div class="muted">Realized P/L · 24H</div><br><span class="status">${x.key==='C'||x.key==='F'?'RUNNING DEMO':'DEMO'}</span>${x.error?`<p class="warn">${x.error}</p>`:''}</div>`).join('');const metrics=[['Fills',x=>x.fills],['Completed cycles',x=>x.cycles],['Win rate',x=>pct(x.win_rate)],['Realized P/L',x=>pnl(x.pnl)],['Profit factor',x=>n(x.pf,4)],['Avg cycle P/L',x=>pnl(x.avg)],['Best cycle',x=>pnl(x.best)],['Worst cycle',x=>pnl(x.worst)],['Unmatched inventory',x=>n(x.inventory,8)],['Active orders',x=>x.orders.bot],['BUY / SELL',x=>`${x.orders.buy} / ${x.orders.sell}`]];document.getElementById('tbl').innerHTML=metrics.map(m=>`<tr><td>${m[0]}</td>${a.map(x=>`<td>${m[1](x)}</td>`).join('')}</tr>`).join('');document.getElementById('time').textContent=new Date().toLocaleString()}catch(e){document.getElementById('cards').innerHTML=`<p class="warn">Dashboard error: ${e}</p>`}}load();setInterval(load,30000);</script>
+function pnl(v){return v==null?'N/A':(Number(v)>=0?'+':'')+Number(v).toFixed(6)}
+function status(x){if(x.error)return ['NO DATA','idle'];if(x.pnl!=null&&Number(x.pnl)>0)return ['PROFIT','profit'];if(x.pnl!=null&&Number(x.pnl)<0)return ['LOSS','loss'];if(x.orders&&x.orders.bot>0)return ['RUNNING','running'];if(x.fills>0)return ['WAITING','waiting'];return ['IDLE','idle']}
+async function load(){try{const r=await fetch('/api/dashboard?ts='+Date.now(),{cache:'no-store'});const a=await r.json();
+const valid=a.filter(x=>x.pnl!=null);const total=valid.reduce((s,x)=>s+Number(x.pnl),0);const profitable=valid.filter(x=>Number(x.pnl)>0).length;const losing=valid.filter(x=>Number(x.pnl)<0).length;
+document.getElementById('summary').innerHTML=`<div class="box"><div class="muted">TOTAL REALIZED P/L · 24H</div><div class="value ${total>=0?'profit':'loss'}">${pnl(total)} USDT</div></div><div class="box"><div class="muted">PROFIT / LOSS BOTS</div><div class="value"><span class="profit">${profitable} PROFIT</span> / <span class="loss">${losing} LOSS</span></div></div><div class="box"><div class="muted">RUNNING / WAITING</div><div class="value">${a.filter(x=>x.orders&&x.orders.bot>0).length} / ${a.filter(x=>x.fills>0&&(!x.orders||x.orders.bot===0)).length}</div></div>`;
+document.getElementById('cards').innerHTML=a.map(x=>{const s=status(x);return `<div class="card"><h2>${x.key} / ${x.name}</h2><div class="big ${s[1]}">${x.has_data?pnl(x.pnl):'N/A'}</div><div class="muted">Realized P/L · 24H</div><br><span class="status ${s[1]}">${s[0]}</span>${x.error?`<p class="warn">${x.error}</p>`:''}</div>`}).join('');
+document.getElementById('tbl').innerHTML=a.map(x=>{const s=status(x);return `<tr><td>${x.key} / ${x.name}</td><td><span class="status ${s[1]}">${s[0]}</span></td><td class="${s[1]}">${x.has_data?pnl(x.pnl):'N/A'}</td><td>${x.cycles}</td><td>${x.orders.bot}</td><td>${x.inventory==null?'N/A':Number(x.inventory).toFixed(8)}</td></tr>`}).join('');document.getElementById('time').textContent=new Date().toLocaleString('th-TH')}catch(e){document.getElementById('cards').innerHTML=`<p class="warn">Dashboard error: ${e}</p>`}}
+load();setInterval(load,30000);
+</script>
 </body></html>
 """
 
