@@ -1,0 +1,1 @@
+User wants to use Remote Command workflow to operate AdaptiveGridBot on a remote Linux server, including running/testing commands remotely when the configured Serena tunnel/tool targets that server.

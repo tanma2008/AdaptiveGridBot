@@ -1,0 +1,1 @@
+Dashboard target is currently adaptive_grid_dashboard2.py. User expects the 6-bot dashboard to include SOL in addition to BTC/ETH when the SOL bots are part of the active bot set; do not silently remove SOL from the dashboard. Preserve read-only behavior.

@@ -1,0 +1,1 @@
+Edit now: wrap direct OKX order request in try/except Exception and continue to next candidate; log TIMEOUT/ERROR with clOrdId. Do not blindly retry. Then user will run PC once.

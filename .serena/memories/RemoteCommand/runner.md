@@ -1,0 +1,1 @@
+Remote bot runner target: r740 100.105.241.85, root, project /home/amnat/AdaptiveGridBot, Python /home/amnat/AdaptiveGridBot/.venv/bin/python. Runner actions intended: start/status/stop/log. Previous PowerShell/Bash quoting and CRLF issues caused pgrep/PidFile failures; use base64-encoded Bash sent via SSH stdin to avoid PowerShell expansion and CRLF.

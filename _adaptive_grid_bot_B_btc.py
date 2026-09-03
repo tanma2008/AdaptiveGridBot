@@ -191,269 +191,115 @@ def account_balance():
     return balances
 
 
-def run_once(): 
+def run_once():
     print()
     print("=" * 76)
     print("        ADAPTIVE GRID BOT B v4.9 SMART LOOP")
     print("          OKX DEMO SMART RECONCILIATION LOOP")
     print("=" * 76)
 
-    # --------------------------------------------------------
-    # HARD DEMO SAFETY
-    # --------------------------------------------------------
     flag = os.getenv("OKX_FLAG")
-
-    print()
-    print(f"OKX_FLAG          : {flag!r}")
+    print(f"\nOKX_FLAG          : {flag!r}")
     print(f"Symbol            : {INST_ID}")
     print(f"Strategy Capital  : ${STRATEGY_CAPITAL_USDT:,.2f}")
     print(f"Max Exposure      : ${MAX_EXPOSURE_USDT:,.2f}")
     print(f"Order Size        : ${ORDER_SIZE_USDT:,.2f}")
     print(f"Grid              : {BUY_LEVELS} BUY / {SELL_LEVELS} SELL")
-
     if flag != "1":
-        raise RuntimeError(
-            "ABORTED: This runner only permits OKX DEMO "
-            "(OKX_FLAG=1). No LIVE orders allowed."
-        )
+        raise RuntimeError("ABORTED: This runner only permits OKX DEMO (OKX_FLAG=1). No LIVE orders allowed.")
 
-    # --------------------------------------------------------
-    # ACCOUNT PRE-FLIGHT
-    # --------------------------------------------------------
     balances = account_balance()
-
     usdt = balances.get("USDT", Decimal("0"))
     btc = balances.get("BTC", Decimal("0"))
-
-    print()
-    print("=" * 76)
-    print("DEMO ACCOUNT")
-    print("=" * 76)
+    print("\n" + "=" * 76 + "\nDEMO ACCOUNT\n" + "=" * 76)
     print(f"Available USDT    : {usdt}")
     print(f"Available BTC     : {btc}")
 
-    # --------------------------------------------------------
-    # MARKET
-    # --------------------------------------------------------
     price, atr = get_market_data()
     atr_percent = atr / price
     regime, grid_percent = determine_regime(atr_percent)
-
-    print()
-    print("=" * 76)
-    print("MARKET STATE")
-    print("=" * 76)
+    print("\n" + "=" * 76 + "\nMARKET STATE\n" + "=" * 76)
     print(f"BTC Price         : ${price:,.2f}")
     print(f"ATR               : ${atr:,.2f}")
     print(f"ATR / Price       : {atr_percent * 100:.4f}%")
     print(f"Regime            : {regime}")
     print(f"Grid Distance     : {grid_percent * 100:.4f}%")
 
-    # --------------------------------------------------------
-    # OPEN ORDERS
-    # --------------------------------------------------------
     manager = OrderManager()
     open_orders = manager.get_open_orders()
-
-    current_exposure = Decimal("0")
-    buy_count = 0
-    sell_count = 0
-
-    for order in open_orders:
-        side = str(order.get("side", "")).lower()
-        order_value = (
-            D(order.get("px", "0"))
-            * D(order.get("sz", "0"))
-        )
-
-        current_exposure += order_value
-
-        if side == "buy":
-            buy_count += 1
-        elif side == "sell":
-            sell_count += 1
-
-    print()
-    print("=" * 76)
-    print("CURRENT DEMO RISK")
-    print("=" * 76)
+    current_exposure = sum(D(o.get("px", "0")) * D(o.get("sz", "0")) for o in open_orders)
+    buy_count = sum(str(o.get("side", "")).lower() == "buy" for o in open_orders)
+    sell_count = sum(str(o.get("side", "")).lower() == "sell" for o in open_orders)
+    print("\n" + "=" * 76 + "\nCURRENT DEMO RISK\n" + "=" * 76)
     print(f"Open Orders       : {len(open_orders)}")
     print(f"BUY Orders        : {buy_count}")
     print(f"SELL Orders       : {sell_count}")
     print(f"Exposure          : ${current_exposure:,.2f}")
-    print(
-        f"Remaining         : "
-        f"${MAX_EXPOSURE_USDT - current_exposure:,.2f}"
-    )
-
+    print(f"Remaining         : ${MAX_EXPOSURE_USDT - current_exposure:,.2f}")
     if current_exposure > MAX_EXPOSURE_USDT:
-        raise RuntimeError(
-            "ABORTED: Existing exposure already exceeds cap."
-        )
+        raise RuntimeError("ABORTED: Existing exposure already exceeds cap.")
 
-    if len(open_orders) > 20:
-        raise RuntimeError(
-            "ABORTED: More than 20 open orders already exist."
-        )
+    grid_state = get_target_grid(open_orders)
+    target_grid = grid_state["grid"]
+    stale, missing = reconcile_orders(manager, target_grid, open_orders)
+    print("\n" + "=" * 76 + "\nRECONCILIATION\n" + "=" * 76)
+    print(f"Target orders     : {len(target_grid)}")
+    print(f"Stale orders      : {len(stale)}")
+    print(f"Missing orders    : {len(missing)}")
 
-    # --------------------------------------------------------
-    # BUILD TARGET GRID
-    # --------------------------------------------------------
-    grid = build_grid(
-        price,
-        grid_percent,
-    )
+    # Reconcile excess/stale orders individually. Never cancel-all.
+    for order in stale:
+        ord_id = order.get("ordId")
+        if not ord_id:
+            print("[SAFE SKIP] Stale order has no ID.")
+            continue
+        try:
+            manager.cancel_order(ord_id)
+            print(f"[CANCELLED] {order.get('side', '').upper()} | ${D(order.get('px', order.get('price', '0'))):,.1f} | {ord_id}")
+        except Exception as exc:
+            print(f"[CANCEL FAILED] {ord_id} | {exc}")
+            return
 
-    missing = []
+    current_orders = manager.get_open_orders()
+    _, missing = reconcile_orders(manager, target_grid, current_orders)
+    current_exposure = sum(D(o.get("px", "0")) * D(o.get("sz", "0")) for o in current_orders)
+    capacity = int(max(Decimal("0"), MAX_EXPOSURE_USDT - current_exposure) / ORDER_SIZE_USDT)
+    missing = missing[:capacity]
+    new_buys = [x for x in missing if x["side"] == "buy"]
+    new_sells = [x for x in missing if x["side"] == "sell"]
+    required_sell_btc = sum((D(ORDER_SIZE_USDT) / D(str(x["price"])) for x in new_sells), Decimal("0"))
 
-    for item in grid:
-        matches = [
-            order
-            for order in open_orders
-            if order_matches_grid(order, item)
-        ]
-
-        if not matches:
-            missing.append(item)
-
-    remaining_exposure = (
-        MAX_EXPOSURE_USDT
-        - current_exposure
-    )
-
-    capacity = int(
-        remaining_exposure
-        / ORDER_SIZE_USDT
-    )
-
-    if len(missing) > capacity:
-        missing = missing[:capacity]
-
-    print()
-    print("=" * 76)
-    print("TARGET DEMO GRID")
-    print("=" * 76)
-
-    for item in grid:
-        exists = any(
-            order_matches_grid(order, item)
-            for order in open_orders
-        )
-
-        print(
-            f"[{'EXISTS' if exists else 'NEW':6}] "
-            f"Level {item['level']:>3} | "
-            f"{item['side'].upper():4} | "
-            f"${item['price']:,.1f}"
-        )
-
-    # --------------------------------------------------------
-    # SELL PREFLIGHT
-    #
-    # Spot SELL orders require BTC inventory. Do not submit
-    # SELL orders if demo BTC balance is insufficient.
-    # --------------------------------------------------------
-    new_buys = [
-        x for x in missing
-        if x["side"] == "buy"
-    ]
-
-    new_sells = [
-        x for x in missing
-        if x["side"] == "sell"
-    ]
-
-    required_sell_btc = sum(
-        (
-            D(ORDER_SIZE_USDT)
-            / item["price"]
-            for item in new_sells
-        ),
-        Decimal("0"),
-    )
-
-    print()
-    print("=" * 76)
-    print("EXECUTION PREFLIGHT")
-    print("=" * 76)
+    print("\n" + "=" * 76 + "\nEXECUTION PREFLIGHT\n" + "=" * 76)
     print(f"New BUY orders     : {len(new_buys)}")
     print(f"New SELL orders    : {len(new_sells)}")
     print(f"Required SELL BTC  : {required_sell_btc}")
     print(f"Available BTC      : {btc}")
-
     if new_sells and btc < required_sell_btc:
-        print()
-        print(
-            "SELL ORDERS BLOCKED: insufficient demo BTC."
-        )
-        print(
-            "BUY orders may still be submitted."
-        )
+        print("SELL ORDERS BLOCKED: insufficient demo BTC.")
         new_sells = []
-
     orders_to_place = new_buys + new_sells
-
     if not orders_to_place:
-        print()
-        print("Nothing to place. Demo grid is already complete.")
+        print("[NO CHANGE] Demo grid is reconciled; nothing to place.")
         return
 
-    print()
-    print("=" * 76)
-    print("SUBMITTING DEMO ORDERS")
-    print("=" * 76)
-
+    print("\n" + "=" * 76 + "\nSUBMITTING DEMO ORDERS\n" + "=" * 76)
     placed = 0
     failed = 0
-
     for item in orders_to_place:
         try:
-            response = manager.place_limit_order(
-                side=item["side"],
-                price=item["price"],
-                usdt_size=ORDER_SIZE_USDT,
-            )
-
-            ord_id = (
-                response.get("data", [{}])[0]
-                .get("ordId", "")
-            )
-
-            print(
-                f"[PLACED] Level {item['level']:>3} | "
-                f"{item['side'].upper():4} | "
-                f"${item['price']:,.1f} | "
-                f"Order {ord_id}"
-            )
-
+            response = manager.place_limit_order(side=item["side"], price=item["price"], usdt_size=ORDER_SIZE_USDT)
+            data = response.get("data", [])
+            ord_id = data[0].get("ordId", "") if data else ""
+            print(f"[PLACED] Level {item['level']:>3} | {item['side'].upper():4} | ${item['price']:,.1f} | Order {ord_id}")
             placed += 1
-
         except Exception as exc:
             failed += 1
-            print(
-                f"[FAILED] Level {item['level']:>3} | "
-                f"{item['side'].upper():4} | "
-                f"${item['price']:,.1f} | "
-                f"{exc}"
-            )
-
-    # --------------------------------------------------------
-    # VERIFY
-    # --------------------------------------------------------
+            print(f"[FAILED] Level {item['level']:>3} | {item['side'].upper():4} | ${item['price']:,.1f} | {exc}")
     final_orders = manager.get_open_orders()
-
-    print()
-    print("=" * 76)
-    print("DEMO EXECUTION RESULT")
-    print("=" * 76)
+    print("\n" + "=" * 76 + "\nDEMO EXECUTION RESULT\n" + "=" * 76)
     print(f"Orders submitted   : {placed}")
     print(f"Orders failed      : {failed}")
     print(f"Open orders now     : {len(final_orders)}")
-
-    print()
-    print("=" * 76)
-    print("        ADAPTIVE GRID BOT v4.9 DEMO LOOP")
-    print("=" * 76)
 
 
 
