@@ -1,0 +1,1 @@
+Current Work D:\AdaptiveGridBot bot naming: A=BTC v4.8, B=BTC v4.9, C=BTC v5.1.1, D=ETH v4.8, E=ETH v4.9, F=ETH v5.1.1, G=SOL v4.8, H=SOL v4.9, I=SOL v5.1.1. User explicitly corrected that ETH v4.9 is E, not H.

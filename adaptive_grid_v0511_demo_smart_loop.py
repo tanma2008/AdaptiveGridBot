@@ -33,6 +33,7 @@ import okx.MarketData as MarketData
 
 ENV_FILE = ".env.v50"
 INST_ID = "BTC-USDT"
+BOT_LABEL = "C"
 TD_MODE = "cash"
 PREFIX = "V511"
 
@@ -258,15 +259,18 @@ def get_fills_since(trade, after_ms=None):
 
 def print_header():
     print("=" * 76)
-    print("      ADAPTIVE GRID BOT v5.1.1 - OKX DEMO SMART LOOP")
+    print(f"      ADAPTIVE GRID BOT {BOT_LABEL} | {INST_ID} v5.1.1")
+    print(f"      OKX DEMO | ACCOUNT {BOT_LABEL} | SAFE RECONCILE")
     print("=" * 76)
-    print(f"ENV          : {ENV_FILE}")
-    print(f"Symbol       : {INST_ID}")
-    print(f"Grid         : {GRID_PCT * 100:.2f}%")
-    print(f"Order size   : ${ORDER_USDT:.2f}")
-    print(f"SELL mult.   : {SELL_MULT:.2f}x")
-    print(f"Profit floor : {PROFIT_FLOOR * 100:.2f}%")
-    print(f"Prefix       : {PREFIX}")
+    print(f"Check interval : {LOOP_SECONDS} seconds")
+    print("Mode           : OKX DEMO ONLY")
+    print("Behavior       : SAFE RECONCILE")
+    print("Ctrl+C         : STOP")
+    print(f"Grid           : {GRID_PCT * 100:.2f}%")
+    print(f"Order size     : ${ORDER_USDT:.2f}")
+    print(f"SELL mult.     : {SELL_MULT:.2f}x")
+    print(f"Profit floor   : {PROFIT_FLOOR * 100:.2f}%")
+    print(f"Prefix         : {PREFIX}")
     print()
 
 
@@ -332,6 +336,7 @@ def main():
 
     # Fills already seen in this process, keyed by order id.
     seen_fills = set()
+    cycle = 0
 
     print()
     print("SMART LOOP ACTIVE.")
@@ -340,6 +345,11 @@ def main():
     print()
 
     while running:
+        cycle += 1
+        print()
+        print("=" * 76)
+        print(f" SMART LOOP CYCLE {cycle} | BOT {BOT_LABEL} | {INST_ID} | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 76)
         try:
             last = get_last_price(market)
             balance = get_balance(account)

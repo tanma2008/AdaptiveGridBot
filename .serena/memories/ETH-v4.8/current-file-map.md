@@ -1,0 +1,1 @@
+IMPORTANT FILE MAP: The current/latest active ETH work is `adaptive_grid_bot_D_eth.py`. This is the file to modify, test, and continue development on. `eth_adaptive_grid_v049_demo_smart_loop.py` is OLD/REFERENCE-ONLY code kept for reference; DO NOT MODIFY it. Do not confuse the old v4.9 smart-loop reference with the current D ETH v4.8 work.

@@ -1,37 +1,32 @@
 import os
 import time
 import signal
+import os
+import sys
 import json
 from decimal import Decimal, ROUND_DOWN
 
 from dotenv import load_dotenv
-
-# v4.9 uses Account B only.
-# Load .env.v49 BEFORE importing OrderManager because OrderManager
-# reads OKX credentials at import time.
-load_dotenv('.env.v49', override=True)
-
 import okx.Account as Account
-from order_manager import OrderManager
+
+from sol_order_manager_v048 import OrderManager
 from market_data import get_candles, candles_to_dataframe
 from pathlib import Path
 
 
 # ============================================================
-# ADAPTIVE GRID BOT v4.9 DEMO
+# ADAPTIVE GRID BOT v4.8 DEMO
 # FIRST REAL DEMO EXECUTION
 # ============================================================
 
-INST_ID = "BTC-USDT"
+load_dotenv()
+
+INST_ID = "SOL-USDT"
 
 # Strategy limits
 STRATEGY_CAPITAL_USDT = Decimal("1000.00")
 MAX_EXPOSURE_USDT = Decimal("500.00")
 ORDER_SIZE_USDT = Decimal("5.00")
-
-# v4.9: cap actual + pending BTC inventory created by BUY orders.
-# SELL orders are not restricted by this cap.
-MAX_INVENTORY_USDT = Decimal("1050.00")
 
 BUY_LEVELS = 10
 SELL_LEVELS = 10
@@ -54,7 +49,7 @@ def D(value):
 
 def round_price(price):
     return D(price).quantize(
-        Decimal("0.1"),
+        Decimal("0.01"),
         rounding=ROUND_DOWN,
     )
 
@@ -193,7 +188,7 @@ def account_balance():
 def run_once(): 
     print()
     print("=" * 76)
-    print("        ADAPTIVE GRID BOT v4.9 SMART LOOP")
+    print("        ADAPTIVE GRID BOT v4.8 SMART LOOP")
     print("          OKX DEMO SMART RECONCILIATION LOOP")
     print("=" * 76)
 
@@ -222,14 +217,14 @@ def run_once():
     balances = account_balance()
 
     usdt = balances.get("USDT", Decimal("0"))
-    btc = balances.get("BTC", Decimal("0"))
+    sol = balances.get("SOL", Decimal("0"))
 
     print()
     print("=" * 76)
     print("DEMO ACCOUNT")
     print("=" * 76)
     print(f"Available USDT    : {usdt}")
-    print(f"Available BTC     : {btc}")
+    print(f"Available BTC     : {sol}")
 
     # --------------------------------------------------------
     # MARKET
@@ -362,7 +357,7 @@ def run_once():
         if x["side"] == "sell"
     ]
 
-    required_sell_btc = sum(
+    required_sell_sol = sum(
         (
             D(ORDER_SIZE_USDT)
             / item["price"]
@@ -377,10 +372,10 @@ def run_once():
     print("=" * 76)
     print(f"New BUY orders     : {len(new_buys)}")
     print(f"New SELL orders    : {len(new_sells)}")
-    print(f"Required SELL BTC  : {required_sell_btc}")
-    print(f"Available BTC      : {btc}")
+    print(f"Required SELL BTC  : {required_sell_sol}")
+    print(f"Available BTC      : {sol}")
 
-    if new_sells and btc < required_sell_btc:
+    if new_sells and sol < required_sell_sol:
         print()
         print(
             "SELL ORDERS BLOCKED: insufficient demo BTC."
@@ -451,7 +446,7 @@ def run_once():
 
     print()
     print("=" * 76)
-    print("        ADAPTIVE GRID BOT v4.9 DEMO LOOP")
+    print("        ADAPTIVE GRID BOT v4.8 DEMO LOOP")
     print("=" * 76)
 
 
@@ -468,7 +463,8 @@ def _order_key(side, price, tolerance=0.00015):
 
 
 
-GRID_STATE_FILE = "adaptive_grid_v049_demo_state.json"
+GRID_STATE_FILE = "adaptive_grid_v048_sol_G_demo_state.json"
+DRY_RUN = "--dry-run" in sys.argv
 
 # Do NOT rebuild the grid for every small price movement.
 # Rebuild only when price moves at least this many grid spacings
@@ -867,79 +863,12 @@ def reconcile_orders(
     return stale, missing
 
 
-
-def calculate_inventory_state(open_orders, btc_balance, price):
-    """Return actual BTC + pending BUY BTC inventory exposure."""
-    actual_btc = D(btc_balance)
-    pending_buy_btc = sum(
-        (
-            D(order.get("sz", "0"))
-            for order in open_orders
-            if str(order.get("side", "")).lower() == "buy"
-        ),
-        Decimal("0"),
-    )
-    inventory_btc = actual_btc + pending_buy_btc
-    inventory_usdt = inventory_btc * D(price)
-    return actual_btc, pending_buy_btc, inventory_btc, inventory_usdt
-
-
-def apply_inventory_protection(missing, open_orders, btc_balance, price):
-    """Block only new BUYs that would push inventory above the v4.9 cap."""
-    actual_btc, pending_buy_btc, inventory_btc, inventory_usdt = (
-        calculate_inventory_state(open_orders, btc_balance, price)
-    )
-
-    buy_missing = [
-        x for x in missing
-        if str(x.get("side", "")).lower() == "buy"
-    ]
-    sell_missing = [
-        x for x in missing
-        if str(x.get("side", "")).lower() == "sell"
-    ]
-
-    allowed_buys = []
-    projected = inventory_usdt
-
-    for item in buy_missing:
-        order_usdt = ORDER_SIZE_USDT
-        if projected + order_usdt <= MAX_INVENTORY_USDT:
-            allowed_buys.append(item)
-            projected += order_usdt
-        else:
-            break
-
-    blocked = len(buy_missing) - len(allowed_buys)
-
-    print()
-    print("=" * 76)
-    print("V4.9 INVENTORY PROTECTION")
-    print("=" * 76)
-    print(f"Actual BTC        : {actual_btc}")
-    print(f"Pending BUY BTC   : {pending_buy_btc}")
-    print(f"Inventory BTC     : {inventory_btc}")
-    print(f"Inventory Value   : ${inventory_usdt:,.2f}")
-    print(f"Inventory Cap     : ${MAX_INVENTORY_USDT:,.2f}")
-    print(f"Projected Value   : ${projected:,.2f}")
-    print(f"BUY Missing       : {len(buy_missing)}")
-    print(f"BUY Allowed       : {len(allowed_buys)}")
-    print(f"SELL Missing      : {len(sell_missing)}")
-
-    if blocked:
-        print(f"[INVENTORY PROTECTION] Blocked {blocked} new BUY order(s).")
-    else:
-        print("[INVENTORY OK] BUY inventory within cap.")
-
-    return allowed_buys + sell_missing
-
-
 def smart_loop_main():
 
     interval = int(
         os.getenv(
             "DEMO_LOOP_INTERVAL",
-            "60",
+            "30",
         )
     )
 
@@ -948,12 +877,12 @@ def smart_loop_main():
 
     print()
     print("=" * 76)
-    print("      ADAPTIVE GRID BOT B | BTC-USDT v4.9")
-    print("      OKX DEMO | ACCOUNT B | SAFE RECONCILE")
+    print("       ADAPTIVE GRID BOT v4.8 SMART DEMO LOOP v3")
     print("=" * 76)
+    print()
     print(f"Check interval : {interval} seconds")
     print("Mode           : OKX DEMO ONLY")
-    print("Behavior       : SAFE RECONCILE")
+    print("Behavior       : RECONCILE ONLY")
     print("Ctrl+C         : STOP")
     print()
     print(
@@ -976,7 +905,7 @@ def smart_loop_main():
         print()
         print("=" * 76)
         print(
-            f" SMART LOOP CYCLE {cycle} | BOT B | BTC-USDT "
+            f" SMART LOOP CYCLE {cycle} "
             f"| {time.strftime('%Y-%m-%d %H:%M:%S')}"
         )
         print("=" * 76)
@@ -1019,7 +948,7 @@ def smart_loop_main():
                 continue
 
             print(
-                f"BTC price         : "
+                f"SOL price         : "
                 f"${state['price']:,.2f}"
             )
             print(
@@ -1098,6 +1027,25 @@ def smart_loop_main():
 
                 time.sleep(interval)
                 continue
+
+            # ------------------------------------------------
+            # DRY RUN: inspect only. Never cancel or place.
+            # ------------------------------------------------
+            if DRY_RUN:
+                for order in stale:
+                    print(
+                        f"[WOULD CANCEL] {order['side'].upper()} "
+                        f"| ${order['price']:,.2f}"
+                    )
+                for order in missing:
+                    print(
+                        f"[WOULD PLACE] Level {str(order.get('level','')).rjust(3)} "
+                        f"| {order['side'].upper():4} "
+                        f"| ${order['price']:,.2f}"
+                    )
+                print()
+                print("SOL v4.8 DRY RUN - NO ORDERS SUBMITTED")
+                break
 
             # ------------------------------------------------
             # Cancel stale orders ONLY after a real grid
@@ -1211,27 +1159,6 @@ def smart_loop_main():
                 )
                 missing = missing[:max_new_orders]
 
-            # ------------------------------------------------
-            # v4.9 INVENTORY PROTECTION
-            # ------------------------------------------------
-            try:
-                balances = account_balance()
-                current_btc = balances.get("BTC", Decimal("0"))
-            except Exception as exc:
-                print(
-                    "[SAFE STOP] Could not read BTC balance "
-                    f"for inventory protection: {exc}"
-                )
-                time.sleep(interval)
-                continue
-
-            missing = apply_inventory_protection(
-                missing=missing,
-                open_orders=current_orders_after_cancel,
-                btc_balance=current_btc,
-                price=state["price"],
-            )
-
             for order in missing:
 
                 try:
@@ -1314,4 +1241,3 @@ def smart_loop_main():
 
 if __name__ == "__main__":
     smart_loop_main()
-

@@ -13,7 +13,7 @@ Designed for the existing Linux server running v5.1.1.
 import os
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from flask import Flask, render_template_string, jsonify, request
+from flask import Flask, render_template_string, jsonify
 
 import okx.Trade as Trade
 from dotenv import load_dotenv
@@ -160,11 +160,11 @@ def get_open_orders(account):
         return {"all": 0, "bot": 0, "buy": 0, "sell": 0}
 
 
-def get_dashboard(hours=24):
+def get_dashboard():
     data = []
     for a in ACCOUNTS:
         try:
-            rows = period_fills(fetch_fills(api_for(a), a.get("symbol", SYMBOL)), hours)
+            rows = period_fills(fetch_fills(api_for(a), a.get("symbol", SYMBOL)), 24)
             r = report(rows)
             orders = get_open_orders(a)
             r["has_data"] = bool(rows or orders["bot"])
@@ -196,7 +196,7 @@ h1{margin:0 0 6px}.sub{color:#9aa6bd;margin-bottom:20px}
 table{width:100%;border-collapse:collapse;margin-top:18px;background:#151c2f;border-radius:14px;overflow:hidden}
 th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-child,td:first-child{text-align:left}
 .matrix{margin-top:10px}.matrix th,.matrix td{text-align:center}.matrix th:first-child,.matrix td:first-child{text-align:left;font-weight:700}.bot-cell{font-size:15px;font-weight:700;text-align:center!important;line-height:1.35}.bot-key{display:inline-block;font-size:15px;font-weight:800;padding:3px 9px;border-radius:8px;background:#25304a;box-shadow:inset 0 0 0 1px #34415e}.buy{color:#48d597}.sell{color:#ffca62}.bot-pnl{font-size:20px;font-weight:800}.pnl-pos{color:#48d597;text-shadow:0 0 10px rgba(72,213,151,.25)}.pnl-neg{color:#ff5c70;text-shadow:0 0 10px rgba(255,92,112,.25)}.bot-meta{font-size:12px;color:#c2cbe0;margin-top:6px;letter-spacing:.2px}.bot-cell{background:linear-gradient(145deg,#18213a,#11182b);transition:.2s}.bot-cell:hover{background:#1c2742;transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.25)}
-.periods{display:flex;gap:8px;margin:0 0 14px}.period{background:#25304a;color:#dce4f5;border:1px solid #34415e;border-radius:9px;padding:8px 16px;cursor:pointer;font-weight:700}.period.active{background:#3a4d78;color:#fff;box-shadow:0 0 0 1px #667ba8}.btn{background:#25304a;color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.btn{background:#25304a;color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .status{display:inline-block;padding:4px 8px;border-radius:99px;background:#173a31;color:#6de4b0}
 @media(max-width:800px){.grid{grid-template-columns:1fr}.matrix{font-size:13px}.bot-cell{font-size:20px}}
 </style>
@@ -204,8 +204,7 @@ th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-chi
 <body>
 <div class="wrap">
 <h1>🤖 ADAPTIVE GRID BOT DASHBOARD</h1>
-<div class="sub">🤖 9 BOT · 🌐 3 MARKETS · 🧪 DEMO · <span id="periodLabel">⏱️ 24H</span> · 🔒 READ ONLY</div>
-<div class="periods"><button class="period active" data-period="24h" onclick="setPeriod('24h')">24H</button><button class="period" data-period="3d" onclick="setPeriod('3d')">3D</button><button class="period" data-period="7d" onclick="setPeriod('7d')">7D</button><button class="period" data-period="30d" onclick="setPeriod('30d')">30D</button></div>
+<div class="sub">🤖 9 BOT · 🌐 3 MARKETS · 🧪 DEMO · ⏱️ 24H · 🔒 READ ONLY</div>
 <div class="matrix-wrap">
 <table class="matrix">
 <thead><tr><th>📊 ตลาด</th><th>⚙️ v4.8</th><th>⚡ v4.9</th><th>🚀 v5.1.1</th></tr></thead>
@@ -224,12 +223,8 @@ function n(v,d=4){return v===null||v===undefined?"N/A":Number(v).toFixed(d)}
 function pct(v){return v===null||v===undefined?"N/A":Number(v).toFixed(2)+"%"}
 function pnl(v){return v===null||v===undefined?"N/A":(v>=0?"+":"")+Number(v).toFixed(6)}
 function pnlClass(v){return v===null||v===undefined?"":(v>=0?"pnl-pos":"pnl-neg")}
-let currentPeriod=new URLSearchParams(location.search).get("period")||"24h";
-function setPeriod(p){currentPeriod=p;history.replaceState(null,"",`/?period=${p}`);updatePeriodUI();load()}
-function updatePeriodUI(){document.querySelectorAll(".period").forEach(b=>b.classList.toggle("active",b.dataset.period===currentPeriod));document.getElementById("periodLabel").textContent="⏱️ "+currentPeriod.toUpperCase()}
 async function load(){
- updatePeriodUI();
- const r=await fetch(`/api/dashboard?period=${currentPeriod}`); const a=await r.json();
+ const r=await fetch("/api/dashboard"); const a=await r.json();
  const markets=["BTC-USDT","ETH-USDT","SOL-USDT"];
  const versions=["v4.8","v4.9","v5.1.1"];
  document.getElementById("matrix").innerHTML=markets.map((sym,ri)=>`<tr><td>${sym.replace("-USDT","")}</td>${versions.map((v,ci)=>{const x=a[ri*3+ci];return `<td class="bot-cell"><div class="bot-key">${x.key}</div><div class="bot-pnl ${pnlClass(x.pnl)}">${pnl(x.pnl)}</div><div class="bot-meta"><span class="buy">▲ BUY ${x.orders.buy}</span><span> · </span><span class="sell">▼ SELL ${x.orders.sell}</span></div></td>`}).join("")}</tr>`).join("");
@@ -249,9 +244,7 @@ def index():
 
 @app.route("/api/dashboard")
 def api_dashboard():
-    period = request.args.get("period", "24h").lower()
-    hours = {"24h": 24, "3d": 72, "7d": 168, "30d": 720}.get(period, 24)
-    return jsonify(get_dashboard(hours))
+    return jsonify(get_dashboard())
 
 if __name__ == "__main__":
     port = int(os.getenv("DASHBOARD_PORT", "8080"))

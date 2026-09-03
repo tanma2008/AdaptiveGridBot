@@ -1,4 +1,5 @@
 ﻿import os
+import os
 import time
 import signal
 import json
@@ -18,8 +19,8 @@ from pathlib import Path
 
 
 # ============================================================
-# ADAPTIVE GRID BOT v4.9 DEMO
-# FIRST REAL DEMO EXECUTION
+# ADAPTIVE GRID BOT B v4.9 DEMO
+# BTC-USDT SMART LOOP
 # ============================================================
 
 INST_ID = "BTC-USDT"
@@ -193,7 +194,7 @@ def account_balance():
 def run_once(): 
     print()
     print("=" * 76)
-    print("        ADAPTIVE GRID BOT v4.9 SMART LOOP")
+    print("        ADAPTIVE GRID BOT B v4.9 SMART LOOP")
     print("          OKX DEMO SMART RECONCILIATION LOOP")
     print("=" * 76)
 

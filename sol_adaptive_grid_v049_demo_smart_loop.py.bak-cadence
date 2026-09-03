@@ -339,11 +339,8 @@ def smart_loop_main():
     print("Safety         : no cancel-all; DEMO flag required")
     manager = OrderManager()
     cycle = 0
-    next_run = time.monotonic()
-
     while True:
         cycle += 1
-        cycle_started = time.monotonic()
         try:
             run_cycle(manager, cycle, dry_run=args.dry_run)
         except KeyboardInterrupt:
@@ -355,11 +352,7 @@ def smart_loop_main():
         if args.once:
             print("\n[ONCE] Single cycle complete.")
             break
-        next_run += interval
-        sleep_for = max(0.0, next_run - time.monotonic())
-        elapsed = time.monotonic() - cycle_started
-        print(f"[NEXT CYCLE] {sleep_for:.1f}s | cycle runtime {elapsed:.1f}s | target interval {interval}s")
-        time.sleep(sleep_for)
+        time.sleep(interval)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,1 @@
+C fix is being applied only to adaptive_grid_bot_C_btc.py; original v5.1.1 source remains untouched.

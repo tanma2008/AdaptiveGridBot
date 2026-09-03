@@ -1,0 +1,57 @@
+
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Adaptive Grid Bot Dashboard</title>
+<style>
+body{margin:0;background:#0b1020;color:#e8edf7;font-family:Arial,sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:24px}
+h1{margin:0 0 6px}.sub{color:#9aa6bd;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:#151c2f;border:1px solid #29344e;border-radius:14px;padding:18px}
+.card h2{margin-top:0}.big{font-size:30px;font-weight:700}
+.ok{color:#48d597}.muted{color:#9aa6bd}.warn{color:#ffca62}
+table{width:100%;border-collapse:collapse;margin-top:18px;background:#151c2f;border-radius:14px;overflow:hidden}
+th,td{padding:12px;border-bottom:1px solid #29344e;text-align:right}th:first-child,td:first-child{text-align:left}
+.matrix{margin-top:10px}.matrix th,.matrix td{text-align:center}.matrix th:first-child,.matrix td:first-child{text-align:left;font-weight:700}.bot-cell{font-size:24px;font-weight:800;text-align:center!important}
+.btn{background:#25304a;color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer}
+.status{display:inline-block;padding:4px 8px;border-radius:99px;background:#173a31;color:#6de4b0}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.matrix{font-size:13px}.bot-cell{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>ADAPTIVE GRID BOT DASHBOARD</h1>
+<div class="sub">9 BOT · 3 MARKETS · DEMO · 24H · READ ONLY</div>
+<div class="matrix-wrap">
+<table class="matrix">
+<thead><tr><th>ตลาด</th><th>v4.8</th><th>v4.9</th><th>v5.1.1</th></tr></thead>
+<tbody id="matrix"></tbody>
+</table>
+</div>
+<table>
+<thead><tr id="head"><th>Metric</th></tr></thead>
+<tbody id="tbl"></tbody>
+</table>
+<p class="muted">Auto refresh: 30s · Last update: <span id="time">-</span></p>
+<button class="btn" onclick="load()">Refresh now</button>
+</div>
+<script>
+function n(v,d=4){return v===null||v===undefined?"N/A":Number(v).toFixed(d)}
+function pct(v){return v===null||v===undefined?"N/A":Number(v).toFixed(2)+"%"}
+function pnl(v){return v===null||v===undefined?"N/A":(v>=0?"+":"")+Number(v).toFixed(6)}
+async function load(){
+ const r=await fetch("/api/dashboard"); const a=await r.json();
+ const markets=["BTC-USDT","ETH-USDT","SOL-USDT"];
+ const versions=["v4.8","v4.9","v5.1.1"];
+ document.getElementById("matrix").innerHTML=markets.map((sym,ri)=>`<tr><td>${sym.replace("-USDT","")}</td>${versions.map((v,ci)=>{const x=a[ri*3+ci];return `<td class="bot-cell">${x.key}</td>`}).join("")}</tr>`).join("");
+ const metrics=[["Fills",x=>x.fills],["Completed cycles",x=>x.cycles],["Win rate",x=>pct(x.win_rate)],["Realized P/L",x=>pnl(x.pnl)],["Profit factor",x=>n(x.pf,4)],["Avg cycle P/L",x=>pnl(x.avg)],["Best cycle",x=>pnl(x.best)],["Worst cycle",x=>pnl(x.worst)],["Unmatched inventory",x=>n(x.inventory,8)],["Active orders",x=>x.orders.bot],["BUY / SELL",x=>`${x.orders.buy} / ${x.orders.sell}`]];
+ document.getElementById("head").innerHTML="<th>Metric</th>"+a.map(x=>`<th>${x.key} / ${x.symbol.replace("-USDT","")} ${x.name}</th>`).join("");
+ document.getElementById("tbl").innerHTML=metrics.map(m=>`<tr><td>${m[0]}</td>${a.map(x=>`<td>${m[1](x)}</td>`).join("")}</tr>`).join("");
+ document.getElementById("time").textContent=new Date().toLocaleString();
+}
+load();setInterval(load,30000);
+</script>
+</body></html>

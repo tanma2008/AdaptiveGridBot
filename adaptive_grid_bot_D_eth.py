@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 import os
 import time
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
@@ -250,16 +250,16 @@ def build_orders(market, account, existing_orders=None):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--execute-demo', action='store_true', help='Actually submit validated orders to OKX DEMO')
-    parser.add_argument('--loop', action='store_true', help='Run continuously every interval seconds')
-    parser.add_argument('--interval', type=int, default=60, help='Seconds between cycles (minimum 60)')
-    args = parser.parse_args()
+    # BAT is the sole entry-point contract: no CLI options are required.
+    # Bot D always runs the validated OKX DEMO reconciliation loop.
+    execute_demo = True
+    loop = True
+    interval = 60
 
     if os.getenv('OKX_LIVE', '0') == '1':
         raise RuntimeError('LIVE GATE BLOCKED: OKX_LIVE must not be enabled')
 
-    interval = max(60, args.interval)
+    interval = max(60, interval)
     market, account, trade = api_init()
     manager = OrderManager(trade)
     cycle = 0
@@ -274,9 +274,13 @@ def main():
 
             print()
             print('=' * 76)
-            print(f'ETH-USDT ADAPTIVE GRID BOT v4.8 | DEMO CYCLE {cycle}')
-            print('OKX DEMO ONLY')
+            print(f'      ADAPTIVE GRID BOT D | ETH-USDT v4.8')
+            print(f'      OKX DEMO | ACCOUNT D | SAFE RECONCILE')
             print('=' * 76)
+            print(f'Cycle          : {cycle}')
+            print('Mode           : OKX DEMO ONLY')
+            print('Behavior       : SAFE RECONCILE')
+            print('Ctrl+C         : STOP')
             print(f'Price            : {price}')
             print(f'Trend            : {trend}')
             print(f'ATR30D           : {atr}')
@@ -292,7 +296,7 @@ def main():
                 print(f"  {i:02d} {o['side'].upper():4} L{o['level']:+d} px={o['px']} sz={o['sz']}")
 
             open_orders, actions = manager.reconcile(
-                orders, execute=args.execute_demo, open_orders=existing_open_orders
+                orders, execute=execute_demo, open_orders=existing_open_orders
             )
 
             print(f'Open orders        : {len(open_orders)}')
@@ -300,7 +304,7 @@ def main():
             for clid, action, _ in actions:
                 print(f'  {clid:10} {action}')
 
-            if args.execute_demo:
+            if execute_demo:
                 print('DEMO ORDER RECONCILIATION COMPLETE')
                 print(f'Actions processed  : {len(actions)}')
                 print('Production/live    : NOT USED (flag=1)')
@@ -312,10 +316,10 @@ def main():
             break
         except Exception as exc:
             print(f'ERROR: {type(exc).__name__}: {exc}')
-            if not args.loop:
+            if not loop:
                 raise
 
-        if not args.loop:
+        if not loop:
             break
 
         print(f'Next cycle in {interval} seconds...')
@@ -328,3 +332,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

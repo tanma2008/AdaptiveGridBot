@@ -1,0 +1,1 @@
+CURRENT BOT MAP: A BTC v4.8; B BTC v4.9; C BTC v5.1.1; D ETH v4.8; E ETH v4.9; F ETH v5.1.1; next SOL sequence starts G SOL v4.8, H SOL v4.9, I SOL v5.1.1. New active filenames follow `adaptive_grid_bot_<BOT>_<SYMBOL>.py`. Legacy files remain preserved/reference-only.

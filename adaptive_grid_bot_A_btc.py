@@ -266,17 +266,26 @@ def run_cycle():
 
 
 def main():
-    print("=" * 76)
-    print("        ADAPTIVE GRID BOT A | BTC-USDT")
-    print("             v4.8 STRATEGY BASE")
-    print("              OKX DEMO LOOP")
-    print("=" * 76)
-
     interval = int(os.getenv("BOT_A_INTERVAL_SECONDS", "60"))
     if interval < 10:
         interval = 10
 
+    print("=" * 76)
+    print("      ADAPTIVE GRID BOT A | BTC-USDT v4.8")
+    print("      OKX DEMO | ACCOUNT A | SAFE RECONCILE")
+    print("=" * 76)
+    print(f"Check interval : {interval} seconds")
+    print("Mode           : OKX DEMO ONLY")
+    print("Behavior       : SAFE RECONCILE")
+    print("Ctrl+C         : STOP")
+    print()
+
+    cycle = 0
     while True:
+        cycle += 1
+        print("=" * 76)
+        print(f" SMART LOOP CYCLE {cycle} | BOT A | BTC-USDT | {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 76)
         try:
             run_cycle()
         except KeyboardInterrupt:

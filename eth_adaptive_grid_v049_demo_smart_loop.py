@@ -2,7 +2,6 @@ import os
 import time
 import json
 import argparse
-import time
 from decimal import Decimal
 from pathlib import Path
 
@@ -463,25 +462,32 @@ def smart_loop_main():
 
     print()
     print("=" * 76)
-    print("       ADAPTIVE GRID BOT v4.9 - ETH/USDT")
-    print("          OKX DEMO SMART RECONCILIATION")
+    print("      ADAPTIVE GRID BOT E | ETH-USDT v4.9")
+    print("      OKX DEMO | ACCOUNT E | SAFE RECONCILE")
     print("=" * 76)
+    print(f"Check interval : {interval} seconds")
     print("Mode           : OKX DEMO ONLY")
-    print(f"Symbol         : {INST_ID}")
+    print("Behavior       : SAFE RECONCILE")
+    print("Ctrl+C         : STOP")
     print(f"Order size     : ${ORDER_SIZE_USDT:,.2f}")
     print(f"Max exposure   : ${MAX_EXPOSURE_USDT:,.2f}")
     print(f"Grid           : {BUY_LEVELS} BUY / {SELL_LEVELS} SELL")
-    print(f"Interval       : {interval} seconds")
-    print("Behavior       : reconcile missing/stale orders")
     print(f"Execution      : {'DRY RUN' if args.dry_run else 'DEMO ORDERS'}")
     print("Safety         : no cancel-all; DEMO flag required")
 
     manager = OrderManager()
     cycle = 0
 
+    next_run = time.monotonic()
+
     while True:
         cycle += 1
+        cycle_started = time.monotonic()
         try:
+            print()
+            print("=" * 76)
+            print(f" SMART LOOP CYCLE {cycle} | BOT E | ETH-USDT | {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print("=" * 76)
             run_cycle(manager, cycle, dry_run=args.dry_run)
         except KeyboardInterrupt:
             print("\nETH v4.9 SMART DEMO LOOP STOPPED")
@@ -494,7 +500,11 @@ def smart_loop_main():
             print("\n[ONCE] Single cycle complete.")
             break
 
-        time.sleep(interval)
+        next_run += interval
+        sleep_for = max(0.0, next_run - time.monotonic())
+        elapsed = time.monotonic() - cycle_started
+        print(f"[NEXT CYCLE] {sleep_for:.1f}s | cycle runtime {elapsed:.1f}s | target interval {interval}s")
+        time.sleep(sleep_for)
 
 
 if __name__ == "__main__":
